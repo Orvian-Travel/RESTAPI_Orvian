@@ -5,12 +5,13 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class AdultValidator implements ConstraintValidator<Adult, String> {
 
     @Override
-    public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
         if (value == null) return false;
         try {
             LocalDate birthDate = LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
