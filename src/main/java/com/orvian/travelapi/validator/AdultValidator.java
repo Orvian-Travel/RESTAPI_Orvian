@@ -8,16 +8,11 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-public class AdultValidator implements ConstraintValidator<Adult, String> {
+public class AdultValidator implements ConstraintValidator<Adult, LocalDate> {
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(LocalDate value, ConstraintValidatorContext constraintValidatorContext) {
         if (value == null) return false;
-        try {
-            LocalDate birthDate = LocalDate.parse(value, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-            return !birthDate.plusYears(18).isAfter(LocalDate.now());
-        } catch (DateTimeParseException e) {
-            return false;
-        }
+        return !value.plusYears(18).isAfter(LocalDate.now());
     }
 }
