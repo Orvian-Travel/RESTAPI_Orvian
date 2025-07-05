@@ -1,5 +1,6 @@
 package com.orvian.travelapi.annotation;
 
+import com.orvian.travelapi.validator.ValidRoleValidator;
 import jakarta.validation.Constraint;
 
 import java.lang.annotation.*;
