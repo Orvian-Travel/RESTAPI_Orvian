@@ -12,7 +12,7 @@ public class AdultValidator implements ConstraintValidator<Adult, LocalDate> {
 
     @Override
     public boolean isValid(LocalDate value, ConstraintValidatorContext constraintValidatorContext) {
-        if (value == null) return false;
+        if (value == null) return true;
         return !value.plusYears(18).isAfter(LocalDate.now());
     }
 }
