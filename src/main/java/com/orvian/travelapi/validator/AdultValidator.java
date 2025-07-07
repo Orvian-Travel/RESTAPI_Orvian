@@ -3,11 +3,11 @@ package com.orvian.travelapi.validator;
 import com.orvian.travelapi.annotation.Adult;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 
+@Component
 public class AdultValidator implements ConstraintValidator<Adult, LocalDate> {
 
     @Override
