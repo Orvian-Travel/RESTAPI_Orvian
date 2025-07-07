@@ -4,6 +4,7 @@ import com.orvian.travelapi.controller.GenericController;
 import com.orvian.travelapi.controller.dto.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.ResponseErrorDTO;
 import com.orvian.travelapi.controller.dto.UpdateUserDTO;
+import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
@@ -54,6 +55,34 @@ public class UserControllerImpl implements GenericController {
 
         userService.update(user);
 
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<User>> findAll() {
+        List<User> users = userService.findAll();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserSearchResultDTO> findById(@PathVariable UUID id) {
+
+        return userService.findById(id)
+                .map(user -> {
+                    UserSearchResultDTO dto = userMapper.toDTO(user);
+                    return ResponseEntity.ok(dto);
+                }).orElseGet( () -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        Optional<User> userOptional = userService.findById(id);
+
+        if (userOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        userService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

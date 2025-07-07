@@ -2,6 +2,7 @@ package com.orvian.travelapi.mapper;
 
 import com.orvian.travelapi.controller.dto.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.UpdateUserDTO;
+import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
@@ -15,4 +16,6 @@ public interface UserMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(UpdateUserDTO dto, @MappingTarget User user);
+
+    UserSearchResultDTO toDTO(User user);
 }
