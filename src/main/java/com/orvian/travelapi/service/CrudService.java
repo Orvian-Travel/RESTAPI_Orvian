@@ -10,7 +10,7 @@ public interface CrudService<ID, T> {
 
     T create(T entity);
 
-    T update(ID id, T entity);
+    T update(T entity);
 
     void delete(ID id);
 }
