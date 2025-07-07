@@ -33,8 +33,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User update(UUID uuid, User entity) {
-        return null;
+    public User update(User user) {
+        return userRepository.save(user);
     }
 
     @Override
