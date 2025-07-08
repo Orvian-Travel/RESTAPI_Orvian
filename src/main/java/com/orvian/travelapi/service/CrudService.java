@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CrudService<ID, T> {
-    List<T> findAll();
+    Object findAll();
 
     Optional<T> findById(ID id);
 

@@ -1,7 +1,10 @@
 package com.orvian.travelapi.service.impl;
 
+import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
+import com.orvian.travelapi.controller.dto.UsersListResponseDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.domain.repository.UserRepository;
+import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +21,16 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
     @Override
-    public List<User> findAll() {
+    public UsersListResponseDTO findAll() {
         log.info("Retrieving all users");
-        return userRepository.findAll();
+        List<User> userList = userRepository.findAll();
+        List<UserSearchResultDTO> dtoList = userList.stream()
+                .map(userMapper::toDTO)
+                .toList();
+        return new UsersListResponseDTO(dtoList);
     }
 
     @Override

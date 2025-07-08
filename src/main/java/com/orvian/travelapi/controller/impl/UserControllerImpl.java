@@ -1,10 +1,7 @@
 package com.orvian.travelapi.controller.impl;
 
 import com.orvian.travelapi.controller.GenericController;
-import com.orvian.travelapi.controller.dto.CreateUserDTO;
-import com.orvian.travelapi.controller.dto.ResponseErrorDTO;
-import com.orvian.travelapi.controller.dto.UpdateUserDTO;
-import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
+import com.orvian.travelapi.controller.dto.*;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
@@ -91,11 +88,11 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<List<User>> findAll() {
+    public ResponseEntity<UsersListResponseDTO> findAll() {
         log.info("Fetching all users");
-        List<User> users = userService.findAll();
-        log.info("Total users found: {}", users.size());
-        return ResponseEntity.ok(users);
+        UsersListResponseDTO dtoList = userService.findAll();
+        log.info("Total users found: {}", dtoList.usersList().size());
+        return ResponseEntity.ok(dtoList);
     }
 
     @GetMapping("/{id}")
