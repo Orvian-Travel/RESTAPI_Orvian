@@ -10,6 +10,7 @@ import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserControllerImpl implements GenericController {
 
     private final UserServiceImpl userService;
@@ -30,6 +32,7 @@ public class UserControllerImpl implements GenericController {
     @PostMapping
     public ResponseEntity<Void> create(@RequestBody @Valid CreateUserDTO dto) {
         User user = userMapper.toEntity(dto);
+        log.info("Creating user with email: {}", user.getEmail());
         userService.create(user);
 
         URI location = gerarHeaderLocation(user.getId());
@@ -41,6 +44,7 @@ public class UserControllerImpl implements GenericController {
         Optional<User> userOptional = userService.findById(id);
 
         if (userOptional.isEmpty()) {
+            log.error("User with id {} not found", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(
                             new ResponseErrorDTO(
@@ -53,6 +57,7 @@ public class UserControllerImpl implements GenericController {
         User user = userOptional.get();
         userMapper.updateEntityFromDto(dto, user);
 
+        log.info("Updating user with id: {}", user.getId());
         userService.update(user);
 
         return ResponseEntity.noContent().build();
@@ -60,7 +65,9 @@ public class UserControllerImpl implements GenericController {
 
     @GetMapping
     public ResponseEntity<List<User>> findAll() {
+        log.info("Fetching all users");
         List<User> users = userService.findAll();
+        log.info("Total users found: {}", users.size());
         return ResponseEntity.ok(users);
     }
 
@@ -70,8 +77,12 @@ public class UserControllerImpl implements GenericController {
         return userService.findById(id)
                 .map(user -> {
                     UserSearchResultDTO dto = userMapper.toDTO(user);
+                    log.info("User found with id: {}", id);
                     return ResponseEntity.ok(dto);
-                }).orElseGet( () -> ResponseEntity.notFound().build());
+                }).orElseGet( () -> {
+                    log.error("User with id {} not found", id);
+                    ResponseEntity.notFound().build())
+                };
     }
 
     @DeleteMapping("/{id}")
@@ -79,10 +90,13 @@ public class UserControllerImpl implements GenericController {
         Optional<User> userOptional = userService.findById(id);
 
         if (userOptional.isEmpty()) {
+            log.error("User with id {} not found", id);
             return ResponseEntity.notFound().build();
         }
 
+        log.info("Deleting user with id: {}", id);
         userService.delete(id);
+        log.info("User with id {} deleted successfully", id);
         return ResponseEntity.noContent().build();
     }
 }

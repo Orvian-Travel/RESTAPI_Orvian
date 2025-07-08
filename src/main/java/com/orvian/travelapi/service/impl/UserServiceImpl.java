@@ -5,6 +5,7 @@ import com.orvian.travelapi.domain.repository.UserRepository;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,39 +14,51 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
     @Override
     public List<User> findAll() {
+        log.info("Retrieving all users");
         return userRepository.findAll();
     }
 
     @Override
     public Optional<User> findById(UUID id) {
+        log.info("Retrieving user with ID: {}", id);
         return userRepository.findById(id);
     }
 
     @Override
     public User create(User user) {
+        log.info("Creating user with email: {}", user.getEmail());
         validateCreationAndUpdate(user);
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        log.info("User created with ID: {}", savedUser.getId());
+        return savedUser;
     }
 
     @Override
     public User update(User user) {
+        log.info("Updating user with ID: {}", user.getId());
         validateCreationAndUpdate(user);
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        log.info("User updated with ID: {}", updatedUser.getId());
+        return updatedUser;
     }
 
     @Override
     public void delete(UUID uuid) {
+        log.info("Deleting user with ID: {}", uuid);
         userRepository.deleteById(uuid);
+        log.info("User with ID: {} deleted successfully", uuid);
     }
 
     private void validateCreationAndUpdate(User user) {
         if (isDuplicateUser(user)) {
+            log.error("User already registered: {}", user);
             throw new DuplicatedRegistryException("User already registered");
         }
     }
