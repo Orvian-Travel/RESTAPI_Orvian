@@ -6,7 +6,7 @@ spring:
    username: ${DATASOURCE_USERNAME}
    password: ${DATASOURCE_PASSWORD}
    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-loggin:
+logging:
   pattern:
     console: '%clr(%d{dd-MM-yyyy HH:mm:ss}){faint} %clr(%5p) %clr([%t]){faint} %clr(%-40.40logger){cyan} %clr(:){yellow} %m%n'
   file:
