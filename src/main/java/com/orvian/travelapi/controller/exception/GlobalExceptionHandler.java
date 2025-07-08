@@ -24,23 +24,23 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(InvalidFieldException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleInvalidFieldException(InvalidFieldException e) {
         return new ResponseErrorDTO(
-                HttpStatus.UNPROCESSABLE_ENTITY.value(),
+                HttpStatus.BAD_REQUEST.value(),
                 "Validation error",
                 List.of(new FieldErrorDTO(e.getField(), e.getMessage()))
         );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseErrorDTO handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         List<FieldError> fieldErrors = e.getFieldErrors();
         List<FieldErrorDTO> fieldErrorsList = fieldErrors.stream()
                 .map(error -> new FieldErrorDTO(error.getField(), error.getDefaultMessage()))
                 .toList();
-        return new ResponseErrorDTO(HttpStatus.UNPROCESSABLE_ENTITY.value(), "Validation error", fieldErrorsList);
+        return new ResponseErrorDTO(HttpStatus.BAD_REQUEST.value(), "Validation error", fieldErrorsList);
     }
 
     @ExceptionHandler(NotFoundException.class)
