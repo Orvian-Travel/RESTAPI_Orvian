@@ -22,8 +22,8 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class UserControllerImpl implements GenericController {
 
     private final UserServiceImpl userService;
@@ -81,8 +81,8 @@ public class UserControllerImpl implements GenericController {
                     return ResponseEntity.ok(dto);
                 }).orElseGet( () -> {
                     log.error("User with id {} not found", id);
-                    ResponseEntity.notFound().build())
-                };
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @DeleteMapping("/{id}")
