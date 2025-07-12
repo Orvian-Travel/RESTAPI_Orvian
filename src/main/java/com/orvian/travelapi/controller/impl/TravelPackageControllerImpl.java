@@ -1,16 +1,17 @@
 package com.orvian.travelapi.controller.impl;
 
 import com.orvian.travelapi.controller.GenericController;
+import com.orvian.travelapi.controller.dto.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.PackageSearchResultDTO;
+import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.exception.NoPackageFoundException;
 import com.orvian.travelapi.service.impl.PackageServiceImpl;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,6 +33,19 @@ public class TravelPackageControllerImpl implements GenericController {
         } catch (NoPackageFoundException e){
             log.info("No packages found");
             return ResponseEntity.ok(e.getMessage());
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<TravelPackage> createPackage(@Valid @RequestBody CreateTravelPackageDTO dto) {
+        log.info("Creating new travel package with details: {}", dto);
+        try {
+            var createdPackage = packageService.create(dto);
+            log.info("Travel package created successfully with ID: {}", createdPackage.getId());
+            return ResponseEntity.status(201).build();
+        } catch (Exception e) {
+            log.error("Error creating travel package: {}", e.getMessage());
+            return ResponseEntity.status(500).build();
         }
     }
 }
