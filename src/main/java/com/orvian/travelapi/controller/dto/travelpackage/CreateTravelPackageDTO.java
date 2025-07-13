@@ -1,4 +1,4 @@
-package com.orvian.travelapi.controller.dto;
+package com.orvian.travelapi.controller.dto.travelpackage;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;

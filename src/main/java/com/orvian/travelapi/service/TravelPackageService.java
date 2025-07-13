@@ -1,6 +1,6 @@
 package com.orvian.travelapi.service;
 
-import com.orvian.travelapi.controller.dto.PackageSearchResultDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
 
 import java.util.List;

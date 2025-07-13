@@ -1,4 +1,4 @@
-package com.orvian.travelapi.controller.dto;
+package com.orvian.travelapi.controller.dto.travelpackage;
 
 import java.math.BigDecimal;
 import java.util.Date;

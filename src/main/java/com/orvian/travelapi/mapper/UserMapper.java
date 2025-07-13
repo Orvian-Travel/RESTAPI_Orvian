@@ -1,8 +1,8 @@
 package com.orvian.travelapi.mapper;
 
-import com.orvian.travelapi.controller.dto.CreateUserDTO;
-import com.orvian.travelapi.controller.dto.UpdateUserDTO;
-import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
+import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;

@@ -1,7 +1,7 @@
 package com.orvian.travelapi.service.impl;
 
-import com.orvian.travelapi.controller.dto.UserSearchResultDTO;
-import com.orvian.travelapi.controller.dto.UsersListResponseDTO;
+import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
+import com.orvian.travelapi.controller.dto.user.UsersListResponseDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.domain.repository.UserRepository;
 import com.orvian.travelapi.mapper.UserMapper;

@@ -1,4 +1,4 @@
-package com.orvian.travelapi.controller.dto;
+package com.orvian.travelapi.controller.dto.user;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

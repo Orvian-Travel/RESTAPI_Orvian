@@ -1,7 +1,7 @@
 package com.orvian.travelapi.mapper;
 
-import com.orvian.travelapi.controller.dto.CreateTravelPackageDTO;
-import com.orvian.travelapi.controller.dto.PackageSearchResultDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
 import org.mapstruct.Mapper;
 

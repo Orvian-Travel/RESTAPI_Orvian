@@ -1,7 +1,7 @@
 package com.orvian.travelapi.controller.exception;
 
-import com.orvian.travelapi.controller.dto.FieldErrorDTO;
-import com.orvian.travelapi.controller.dto.ResponseErrorDTO;
+import com.orvian.travelapi.controller.dto.error.FieldErrorDTO;
+import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.InvalidFieldException;
 import com.orvian.travelapi.service.exception.NotFoundException;

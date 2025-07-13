@@ -1,7 +1,11 @@
 package com.orvian.travelapi.controller.impl;
 
 import com.orvian.travelapi.controller.GenericController;
-import com.orvian.travelapi.controller.dto.*;
+import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
+import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
+import com.orvian.travelapi.controller.dto.user.UsersListResponseDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.impl.UserServiceImpl;

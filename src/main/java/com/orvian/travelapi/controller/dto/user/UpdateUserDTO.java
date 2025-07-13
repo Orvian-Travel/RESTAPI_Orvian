@@ -1,10 +1,8 @@
-package com.orvian.travelapi.controller.dto;
+package com.orvian.travelapi.controller.dto.user;
 
 import com.orvian.travelapi.annotation.Adult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
