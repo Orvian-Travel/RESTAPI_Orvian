@@ -38,11 +38,11 @@ public class UserControllerImpl implements GenericController {
     private final UserMapper userMapper;
 
     @PostMapping
-    @Operation(summary = "Create a new user", description = "Creates a new user with the provided details.")
+    @Operation(summary = "Create a new user", description = "Creates a new user with the provided credentials.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "User with the same email already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> create(@RequestBody @Valid CreateUserDTO dto) {
@@ -50,17 +50,17 @@ public class UserControllerImpl implements GenericController {
         log.info("Creating user with email: {}", user.getEmail());
         userService.create(user);
 
-        URI location = gerarHeaderLocation(user.getId());
+        URI location = generateHeaderLocation(user.getId());
         return ResponseEntity.created(location).build();
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing user", description = "Updates the details of an existing user identified by ID.")
+    @Operation(summary = "Update an existing user", description = "Updates the credentials of an existing user identified by ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "User updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "User with the same details already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Object> update(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
