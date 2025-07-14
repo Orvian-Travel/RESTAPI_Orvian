@@ -31,7 +31,10 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public Optional<TravelPackage> findById(UUID uuid) {
-        return Optional.empty();
+        if(uuid == null || !travelPackageRepository.existsById(uuid)) {
+            throw new NoPackageFoundException("Travel package with ID " + uuid + " not found.");
+        }
+        return travelPackageRepository.findById(uuid);
     }
 
     @Override
