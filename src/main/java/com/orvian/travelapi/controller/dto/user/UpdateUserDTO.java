@@ -1,6 +1,7 @@
 package com.orvian.travelapi.controller.dto.user;
 
 import com.orvian.travelapi.annotation.Adult;
+import com.orvian.travelapi.annotation.Document;
 import com.orvian.travelapi.annotation.Password;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -30,6 +31,7 @@ public record UpdateUserDTO(
         String phone,
         @Size(min = 8, max = 14, message = "Document not in valid format")
         @Schema(name = "document", description = "User's identification document number", example = "123.456.789-10 or AZ123456")
+        @Document
         String document,
         @Adult
         @Schema(name = "birthDate", description = "User's birth date in ISO format (YYYY-MM-DD)", example = "1990-01-01")
