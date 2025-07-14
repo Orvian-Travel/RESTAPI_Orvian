@@ -8,6 +8,11 @@ import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.exception.NoPackageFoundException;
 import com.orvian.travelapi.service.impl.PackageServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.PostUpdate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +27,17 @@ import java.util.UUID;
 @RequestMapping("/api/v1/packages")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Package Management", description = "Operations related to travel package management")
 public class TravelPackageControllerImpl implements GenericController {
     private final PackageServiceImpl packageService;
     private final TravelPackageMapper travelPackageMapper;
 
     @GetMapping
+    @Operation(summary = "Get all travel packages", description = "Fetches a list of all available travel packages.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved all travel packages"),
+            @ApiResponse(responseCode = "404", description = "No travel packages found")
+    })
     public ResponseEntity<?> getAllPackages() {
         try{
             log.info("Fetching all packages");
@@ -40,6 +51,12 @@ public class TravelPackageControllerImpl implements GenericController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new travel package", description = "Creates a new travel package with the provided details.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Travel package created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     public ResponseEntity<TravelPackage> createPackage(@Valid @RequestBody CreateTravelPackageDTO dto) {
         log.info("Creating new travel package with details: {}", dto);
         try {
@@ -53,6 +70,11 @@ public class TravelPackageControllerImpl implements GenericController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a travel package", description = "Deletes a travel package identified by its ID.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Travel package deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+    })
     public ResponseEntity<?> deletePackage(@PathVariable UUID id) {
         try {
             log.info("Deleting travel package with ID: {}", id);
@@ -66,6 +88,12 @@ public class TravelPackageControllerImpl implements GenericController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update a travel package", description = "Updates the details of an existing travel package identified by its ID.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Travel package updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+    })
     public ResponseEntity<?> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
         log.info("Updating travel package with ID: {}", id);
         try {
@@ -81,6 +109,11 @@ public class TravelPackageControllerImpl implements GenericController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get a travel package by ID", description = "Fetches a travel package identified by its ID.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Travel package found"),
+            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+    })
     public ResponseEntity<?> getPackageById(@PathVariable UUID id) {
         log.info("Fetching travel package with ID: {}", id);
         try {
