@@ -3,10 +3,12 @@ package com.orvian.travelapi.controller.impl;
 import com.orvian.travelapi.controller.GenericController;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.exception.NoPackageFoundException;
 import com.orvian.travelapi.service.impl.PackageServiceImpl;
+import jakarta.persistence.PostUpdate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -59,6 +61,21 @@ public class TravelPackageControllerImpl implements GenericController {
             return ResponseEntity.noContent().build();
         } catch (NoPackageFoundException e) {
             log.info("Error deleting travel package");
+            return ResponseEntity.ok(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
+        log.info("Updating travel package with ID: {}", id);
+        try {
+            TravelPackage travelPackage = travelPackageMapper.toUpdateTravelPackage(dto);
+            travelPackage.setId(id);
+            var updatedPackage = packageService.update(travelPackage);
+            log.info("Travel package updated successfully with ID: {}", updatedPackage.getId());
+            return ResponseEntity.ok(updatedPackage);
+        } catch (NoPackageFoundException e) {
+            log.info("Error updating travel package: {}", e.getMessage());
             return ResponseEntity.ok(e.getMessage());
         }
     }
