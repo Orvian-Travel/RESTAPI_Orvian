@@ -54,6 +54,10 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public void delete(UUID uuid) {
-
+        if(uuid.equals(null) || !travelPackageRepository.existsById(uuid)){
+            throw new NoPackageFoundException("Travel package with ID " + uuid + " not found.");
+        } else {
+            travelPackageRepository.deleteById(uuid);
+        }
     }
 }
