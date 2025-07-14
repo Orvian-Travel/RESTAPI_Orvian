@@ -3,6 +3,7 @@ package com.orvian.travelapi.controller.dto.user;
 import com.orvian.travelapi.annotation.Adult;
 import com.orvian.travelapi.annotation.Document;
 import com.orvian.travelapi.annotation.Password;
+import com.orvian.travelapi.annotation.Phone;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -34,6 +35,7 @@ public record CreateUserDTO(
         @NotBlank(message = "Phone is required")
         @Size(max = 15, message = "Phone not in valid format")
         @Schema(name = "phone", description = "User's phone number", example = "(12) 34567-8910")
+        @Phone
         String phone,
         @NotBlank(message = "Document is required")
         @Size(min = 8, max = 14, message = "Document not in valid format")
