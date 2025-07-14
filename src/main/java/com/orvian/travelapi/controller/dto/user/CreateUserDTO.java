@@ -1,6 +1,7 @@
 package com.orvian.travelapi.controller.dto.user;
 
 import com.orvian.travelapi.annotation.Adult;
+import com.orvian.travelapi.annotation.Password;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,6 +28,7 @@ public record CreateUserDTO(
         @NotBlank(message = "Password is required")
         @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters long")
         @Schema(name = "password", description = "Password for the user account", example = "securePassword123")
+        @Password
         String password,
         @NotBlank(message = "Phone is required")
         @Size(max = 15, message = "Phone not in valid format")
