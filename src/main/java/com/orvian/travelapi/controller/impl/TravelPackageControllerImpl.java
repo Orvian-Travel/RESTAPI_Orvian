@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/packages")
@@ -46,6 +47,19 @@ public class TravelPackageControllerImpl implements GenericController {
         } catch (Exception e) {
             log.error("Error creating travel package: {}", e.getMessage());
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deletePackage(@PathVariable UUID id) {
+        try {
+            log.info("Deleting travel package with ID: {}", id);
+            packageService.delete(id);
+            log.info("Travel package deleted successfully");
+            return ResponseEntity.noContent().build();
+        } catch (NoPackageFoundException e) {
+            log.info("Error deleting travel package");
+            return ResponseEntity.ok(e.getMessage());
         }
     }
 }
