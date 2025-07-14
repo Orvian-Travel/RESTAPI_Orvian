@@ -79,4 +79,18 @@ public class TravelPackageControllerImpl implements GenericController {
             return ResponseEntity.ok(e.getMessage());
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPackageById(@PathVariable UUID id) {
+        log.info("Fetching travel package with ID: {}", id);
+        try {
+            var travelPackage = packageService.findById(id)
+                    .orElseThrow(() -> new NoPackageFoundException("Travel package with ID " + id + " not found."));
+            log.info("Travel package found with ID: {}", travelPackage.getId());
+            return ResponseEntity.ok(travelPackage);
+        } catch (NoPackageFoundException e) {
+            log.info("Error fetching travel package: {}", e.getMessage());
+            return ResponseEntity.ok(e.getMessage());
+        }
+    }
 }
