@@ -28,8 +28,8 @@ public record CreateUserDTO(
         @Schema(name = "email", description = "User's email address", example = "example@example.com")
         String email,
         @NotBlank(message = "Password is required")
-        @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters long")
-        @Schema(name = "password", description = "Password for the user account", example = "securePassword123")
+        @Size(min = 8, max = 20, message = "Password must be between 8 and 20 characters long")
+        @Schema(name = "password", description = "Password for the user account", example = "Password123!")
         @Password
         String password,
         @NotBlank(message = "Phone is required")
