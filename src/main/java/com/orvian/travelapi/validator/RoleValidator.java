@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 @Component
-public class ValidRoleValidator implements ConstraintValidator<ValidRole, String> {
+public class RoleValidator implements ConstraintValidator<ValidRole, String> {
     private static final Set<String> VALID_ROLES = Set.of("ADMIN", "USER", "ATENDENTE");
 
     @Override
