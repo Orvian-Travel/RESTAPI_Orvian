@@ -151,7 +151,7 @@ public class UserControllerImpl implements GenericController {
                     return ResponseEntity.ok(dto); // Retorna o usuário encontrado com status 200 (OK)
                 }).orElseGet( () -> {
                     log.error("User with id {} not found", id);
-                    return ResponseEntity.notFound().build(); // Retorna 404 (Not Found) se o usuário não for encontrado
+                    throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 (Not Found) se o usuário não for encontrado
                 });
     }
 
@@ -176,7 +176,7 @@ public class UserControllerImpl implements GenericController {
 
         if (userOptional.isEmpty()) {
             log.error("User with id {} not found", id);
-            return ResponseEntity.notFound().build(); // Retorna 404 (Not Found) se o usuário não for encontrado
+            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 (Not Found) se o usuário não for encontrado
         }
 
         log.info("Deleting user with id: {}", id);
