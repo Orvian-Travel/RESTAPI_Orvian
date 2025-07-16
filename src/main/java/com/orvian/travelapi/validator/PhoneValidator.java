@@ -7,6 +7,7 @@ public class PhoneValidator implements ConstraintValidator<Phone, String> {
 
     @Override
     public boolean isValid(String phone, jakarta.validation.ConstraintValidatorContext constraintValidatorContext) {
-        return phone != null && phone.matches("\\(\\d{2}\\) \\d{5}-\\d{4}");
+        if (phone == null) return true; // Permite null para updates
+        return phone.matches("\\(\\d{2}\\) \\d{5}-\\d{4}");
     }
 }

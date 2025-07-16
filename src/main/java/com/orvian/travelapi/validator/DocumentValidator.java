@@ -7,7 +7,8 @@ import jakarta.validation.ConstraintValidatorContext;
 public class DocumentValidator implements ConstraintValidator<Document, String> {
     @Override
     public boolean isValid(String document, ConstraintValidatorContext constraintValidatorContext) {
-        return document != null && (isValidCPF(document) || isValidPassport(document));
+        if (document == null) return true; // Permite null para updates
+        return (isValidCPF(document) || isValidPassport(document));
     }
 
     private boolean isValidCPF(String document) {

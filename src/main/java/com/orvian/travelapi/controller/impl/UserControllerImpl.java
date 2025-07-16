@@ -7,6 +7,7 @@ import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.mapper.UserMapper;
+import com.orvian.travelapi.service.exception.NotFoundException;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -94,13 +95,7 @@ public class UserControllerImpl implements GenericController {
 
         if (userOptional.isEmpty()) {
             log.error("User with id {} not found", id);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(
-                            new ResponseErrorDTO(
-                                    HttpStatus.NOT_FOUND.value(),
-                                    "User not found",
-                                    List.of())
-                    ); // Retorna 404 se o usuário não for encontrado
+            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 se o usuário não for encontrado
         }
 
         User user = userOptional.get(); // Obtém o usuário encontrado
@@ -149,7 +144,6 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<UserSearchResultDTO> findById(@PathVariable UUID id) {
-
         return userService.findById(id)
                 .map(user -> {
                     UserSearchResultDTO dto = userMapper.toDTO(user); // Converte a entidade User para o DTO UserSearchResultDTO, se o usuário for encontrado

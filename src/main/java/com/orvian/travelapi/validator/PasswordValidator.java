@@ -7,6 +7,7 @@ import jakarta.validation.ConstraintValidatorContext;
 public class PasswordValidator implements ConstraintValidator<Password, String> {
     @Override
     public boolean isValid(String password, ConstraintValidatorContext constraintValidatorContext) {
-        return password != null && password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,20}$");
+        if (password == null) return true; // Permite null para updates
+        return password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,20}$");
     }
 }
