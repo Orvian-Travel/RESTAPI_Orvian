@@ -10,6 +10,7 @@ import com.orvian.travelapi.service.exception.NoPackageFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -44,9 +45,9 @@ public class PackageServiceImpl implements TravelPackageService {
 
     public TravelPackage create(CreateTravelPackageDTO dto) {
         TravelPackage travelPackage = travelPackageMapper.toTravelPackage(dto);
-        Date now = new Date();
-        travelPackage.setCreatedAt(now);
-        travelPackage.setUpdatedAt(now);
+        LocalDateTime localDateTime = LocalDateTime.now();
+        travelPackage.setCreatedAt(localDateTime);
+        travelPackage.setUpdatedAt(localDateTime);
         return create(travelPackage);
     }
 
@@ -58,7 +59,7 @@ public class PackageServiceImpl implements TravelPackageService {
         TravelPackage existingPackage = travelPackageRepository.findById(entity.getId())
                 .orElseThrow(() -> new NoPackageFoundException("Travel package with ID " + entity.getId() + " not found."));
         entity.setCreatedAt(existingPackage.getCreatedAt());
-        entity.setUpdatedAt(new Date());
+        entity.setUpdatedAt(LocalDateTime.now());
         return travelPackageRepository.save(entity);
     }
 
