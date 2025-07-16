@@ -5,6 +5,12 @@ import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
+/*
+    DTO para erros de resposta da API.
+    Utilizado para padronizar a estrutura de erros retornados pela API.
+    Inclui o status HTTP, mensagem de erro e uma lista de erros de campo, se houver.
+ */
+
 @Schema(
         name = "ResponseErrorDTO",
         description = "Data Transfer Object for API response errors",
