@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public class TravelPackage {
     @Column(name = "MAX_PEOPLE", nullable = false)
     private int maxPeople;
     @Column(name = "CREATED_AT", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     @Column(name = "UPDATED_AT", nullable = false)
-    private Date updatedAt;
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

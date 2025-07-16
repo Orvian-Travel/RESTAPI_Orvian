@@ -1,6 +1,7 @@
 package com.orvian.travelapi.controller.impl;
 
 import com.orvian.travelapi.controller.GenericController;
+import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
@@ -10,10 +11,10 @@ import com.orvian.travelapi.service.exception.NoPackageFoundException;
 import com.orvian.travelapi.service.impl.PackageServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.PostUpdate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +37,8 @@ public class TravelPackageControllerImpl implements GenericController {
     @Operation(summary = "Get all travel packages", description = "Fetches a list of all available travel packages.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved all travel packages"),
-            @ApiResponse(responseCode = "404", description = "No travel packages found")
+            @ApiResponse(responseCode = "404", description = "No travel packages found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<?> getAllPackages() {
         try{
@@ -54,8 +56,9 @@ public class TravelPackageControllerImpl implements GenericController {
     @Operation(summary = "Create a new travel package", description = "Creates a new travel package with the provided details.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Travel package created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Package with the same data already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<TravelPackage> createPackage(@Valid @RequestBody CreateTravelPackageDTO dto) {
         log.info("Creating new travel package with details: {}", dto);
@@ -73,7 +76,8 @@ public class TravelPackageControllerImpl implements GenericController {
     @Operation(summary = "Delete a travel package", description = "Deletes a travel package identified by its ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Travel package deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<?> deletePackage(@PathVariable UUID id) {
         try {
@@ -90,9 +94,11 @@ public class TravelPackageControllerImpl implements GenericController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a travel package", description = "Updates the details of an existing travel package identified by its ID.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Travel package updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+            @ApiResponse(responseCode = "204", description = "Package updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Package not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Package with the same data already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<?> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
         log.info("Updating travel package with ID: {}", id);
@@ -112,7 +118,8 @@ public class TravelPackageControllerImpl implements GenericController {
     @Operation(summary = "Get a travel package by ID", description = "Fetches a travel package identified by its ID.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Travel package found"),
-            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<?> getPackageById(@PathVariable UUID id) {
         log.info("Fetching travel package with ID: {}", id);

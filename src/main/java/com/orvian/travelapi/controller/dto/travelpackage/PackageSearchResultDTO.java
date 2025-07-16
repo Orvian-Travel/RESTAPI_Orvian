@@ -1,7 +1,7 @@
 package com.orvian.travelapi.controller.dto.travelpackage;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record PackageSearchResultDTO(
@@ -12,7 +12,7 @@ public record PackageSearchResultDTO(
         int duration,
         BigDecimal price,
         int maxPeople,
-        Date createdAt,
-        Date updatedAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
 }
