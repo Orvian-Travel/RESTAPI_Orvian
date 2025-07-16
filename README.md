@@ -1,6 +1,6 @@
 # Orivan Travel API
 
-API RestFul para registro, consulta de reservas e pacotes de viagens.
+API RESTful para registro, consulta de reservas e pacotes de viagens.
 
 ## Tecnologias
 
@@ -72,3 +72,69 @@ public enum Status {
 ### Tratamento de Exceções
 - Exceções de negócio: *service/exception/*
 - Tratamento global: *controller/exception/GlobalExceptionHandler.java*
+
+---
+
+### Endpoints do Serviço de Usuário
+
+- **POST `/api/v1/users`**  
+  Cria um novo usuário.  
+  **Request body:** `CreateUserDTO`  
+  **Respostas:**
+    - 201 Created: Usuário criado com sucesso (Location no header)
+    - 400 Bad Request: Dados inválidos
+    - 409 Conflict: Usuário já existe
+    - 500 Internal Server Error
+
+- **PUT `/api/v1/users/{id}`**  
+  Atualiza um usuário existente pelo ID.  
+  **Request body:** `UpdateUserDTO`  
+  **Respostas:**
+    - 204 No Content: Atualizado com sucesso
+    - 400 Bad Request: Dados inválidos
+    - 404 Not Found: Usuário não encontrado
+    - 409 Conflict: Usuário já existe
+    - 500 Internal Server Error
+
+- **GET `/api/v1/users`**  
+  Lista todos os usuários cadastrados.  
+  **Respostas:**
+    - 200 OK: Lista de usuários (`UserSearchResultDTO[]`)
+    - 500 Internal Server Error
+
+- **GET `/api/v1/users/{id}`**  
+  Busca um usuário pelo ID.  
+  **Respostas:**
+    - 200 OK: Usuário encontrado (`UserSearchResultDTO`)
+    - 404 Not Found: Usuário não encontrado
+    - 500 Internal Server Error
+
+- **DELETE `/api/v1/users/{id}`**  
+  Remove um usuário pelo ID.  
+  **Respostas:**
+    - 204 No Content: Usuário removido
+    - 404 Not Found: Usuário não encontrado
+    - 500 Internal Server Error
+### Estrutura dos DTOs do Serviço de Usuário
+
+##### CreateUserDTO
+- `name` (String, obrigatório): Nome completo do usuário. Máx. 150 caracteres.
+- `email` (String, obrigatório): E-mail do usuário. Máx. 150 caracteres, formato válido.
+- `password` (String, obrigatório): Senha (8-20 caracteres, requisitos de segurança).
+- `phone` (String, obrigatório): Telefone do usuário. Máx. 15 caracteres, formato válido.
+- `document` (String, obrigatório): Documento de identificação (8-14 caracteres, formatos aceitos: CPF, RG, passaporte).
+- `birthDate` (LocalDate, obrigatório): Data de nascimento (ISO, ex: 1990-01-01, deve ser maior de idade).
+- `role` (String, obrigatório): Papel do usuário no sistema. Máx. 20 caracteres.
+
+##### UpdateUserDTO
+- Todos os campos são opcionais, seguem as mesmas regras de validação do `CreateUserDTO`, exceto `role`.
+
+##### UserSearchResultDTO
+- `id` (UUID): Identificador único do usuário.
+- `name` (String): Nome completo.
+- `email` (String): E-mail.
+- `phone` (String): Telefone.
+- `document` (String): Documento.
+- `birthDate` (LocalDate): Data de nascimento.
+
+---
