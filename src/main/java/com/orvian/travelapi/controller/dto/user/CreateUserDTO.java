@@ -12,6 +12,11 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
+/*
+        DTO para a criação de um novo usuário.
+        O @Schema é usado para documentar o DTO na API OpenAPI com Swagger.
+        Coloquei as validações necessárias em cada campo, já com as mensagens de erro apropriadas.
+*/
 @Schema(
         name = "CreateUserDTO",
         description = "Data Transfer Object for creating a new user",

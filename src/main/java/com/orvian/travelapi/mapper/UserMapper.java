@@ -9,6 +9,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+/*
+    Mapper para a entidade de usuário.
+    @Mapper é uma anotação do MapStruct que gera a implementação da interface em tempo de compilação.
+    O componenteModel = "spring" permite que o MapStruct gere um bean Spring, facilitando a injeção de dependências.
+    O @BeanMapping com nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE serve para ignorar os valores nulos na hora de fazer o mapeamento de atualização.
+ */
+
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 

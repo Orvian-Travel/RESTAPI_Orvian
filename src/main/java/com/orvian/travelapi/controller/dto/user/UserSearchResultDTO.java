@@ -5,6 +5,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/*
+         DTO para o resultado de uma busca de usuário.
+         O @Schema é usado para documentar o DTO na API OpenAPI com Swagger..
+         Criei esse DTO para retornar apenas os dados necessários de um usuário, assim não expondo informações sensíveis como senha.
+ */
+
 @Schema(
         name = "UserSearchResultDTO",
         description = "Data Transfer Object for user search results",
