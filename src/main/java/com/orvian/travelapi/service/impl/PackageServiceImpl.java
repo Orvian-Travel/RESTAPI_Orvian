@@ -6,12 +6,11 @@ import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.domain.repository.TravelPackageRepository;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.TravelPackageService;
-import com.orvian.travelapi.service.exception.NoPackageFoundException;
+import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,7 +24,7 @@ public class PackageServiceImpl implements TravelPackageService {
     public List<PackageSearchResultDTO> findAll() {
         List<TravelPackage> packages = travelPackageRepository.findAll();
         if(packages == null || packages.isEmpty()) {
-            throw new NoPackageFoundException("No travel packages found.");
+            throw new NotFoundException("No travel packages found.");
         }
         return travelPackageMapper.toPackageSearchResultDTOList(packages);
     }
@@ -33,7 +32,7 @@ public class PackageServiceImpl implements TravelPackageService {
     @Override
     public Optional<TravelPackage> findById(UUID uuid) {
         if(uuid == null || !travelPackageRepository.existsById(uuid)) {
-            throw new NoPackageFoundException("Travel package with ID " + uuid + " not found.");
+            throw new NotFoundException("Travel package with ID " + uuid + " not found.");
         }
         return travelPackageRepository.findById(uuid);
     }
@@ -54,10 +53,10 @@ public class PackageServiceImpl implements TravelPackageService {
     @Override
     public TravelPackage update(TravelPackage entity) {
         if(entity.getId() == null || !travelPackageRepository.existsById(entity.getId())) {;
-            throw new NoPackageFoundException("Travel package with ID " + entity.getId() + " not found.");
+            throw new NotFoundException("Travel package with ID " + entity.getId() + " not found.");
         }
         TravelPackage existingPackage = travelPackageRepository.findById(entity.getId())
-                .orElseThrow(() -> new NoPackageFoundException("Travel package with ID " + entity.getId() + " not found."));
+                .orElseThrow(() -> new NotFoundException("Travel package with ID " + entity.getId() + " not found."));
         entity.setCreatedAt(existingPackage.getCreatedAt());
         entity.setUpdatedAt(LocalDateTime.now());
         return travelPackageRepository.save(entity);
@@ -66,7 +65,7 @@ public class PackageServiceImpl implements TravelPackageService {
     @Override
     public void delete(UUID uuid) {
         if(uuid.equals(null) || !travelPackageRepository.existsById(uuid)){
-            throw new NoPackageFoundException("Travel package with ID " + uuid + " not found.");
+            throw new NotFoundException("Travel package with ID " + uuid + " not found.");
         } else {
             travelPackageRepository.deleteById(uuid);
         }
