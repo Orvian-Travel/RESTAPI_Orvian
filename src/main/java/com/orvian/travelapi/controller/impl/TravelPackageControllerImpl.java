@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -87,10 +88,18 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Object> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
-        log.info("Updating travel package with ID: {}", id);
-        TravelPackage travelPackage = travelPackageMapper.toUpdateTravelPackage(dto);
-        var updatedPackage = packageService.update(travelPackage);
-        log.info("Travel package updated successfully with ID: {}", updatedPackage.getId());
+        Optional<TravelPackage> packageOptional = packageService.findById(id);
+
+        if (packageOptional.isEmpty()) {
+            log.error("Travel package not found with ID: {}", id);
+            throw new NotFoundException("Travel package not found with ID: " + id);
+        }
+
+        TravelPackage travelPackage = packageOptional.get();
+        travelPackageMapper.updateEntityFromDto(dto, travelPackage);
+
+        packageService.update(travelPackage);
+
         return ResponseEntity.noContent().build();
     }
 

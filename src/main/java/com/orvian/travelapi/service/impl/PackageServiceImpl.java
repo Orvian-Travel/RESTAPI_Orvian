@@ -49,13 +49,7 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public TravelPackage update(TravelPackage entity) {
-        if(entity.getId() == null || !travelPackageRepository.existsById(entity.getId())) {;
-            throw new NotFoundException("Travel package with ID " + entity.getId() + " not found.");
-        }
         validateCreationAndUpdate(entity);
-        TravelPackage existingPackage = travelPackageRepository.findById(entity.getId()).get();
-        entity.setCreatedAt(existingPackage.getCreatedAt());
-        entity.setUpdatedAt(LocalDateTime.now());
         return travelPackageRepository.save(entity);
     }
 

@@ -4,8 +4,10 @@ import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
+import jakarta.validation.Valid;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import java.util.List;
@@ -19,6 +21,8 @@ public interface TravelPackageMapper {
 
     List<PackageSearchResultDTO> toPackageSearchResultDTOList(List<TravelPackage> entities);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     TravelPackage toUpdateTravelPackage(UpdateTravelPackageDTO dto);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void updateEntityFromDto(UpdateTravelPackageDTO dto, @MappingTarget TravelPackage travelPackage);
 }

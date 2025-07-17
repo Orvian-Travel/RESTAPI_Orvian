@@ -1,5 +1,8 @@
 package com.orvian.travelapi.controller.dto.travelpackage;
 
+import com.orvian.travelapi.annotation.DurationUpdate;
+import com.orvian.travelapi.annotation.MaxPeopleUpdate;
+import com.orvian.travelapi.annotation.PriceUpdate;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -11,11 +14,12 @@ public record UpdateTravelPackageDTO(
         String title,
         String description,
         String destination,
-        @Min(value = 1, message = "Duration must be at least 1 day")
-        int duration,
-        @DecimalMin(value = "10.0", message = "Price must be at least 10.0")
+        @DurationUpdate
+        Integer duration,
+        @PriceUpdate
         BigDecimal price,
-        @Min(value = 1, message = "Max people must be at least 1")
-        int maxPeople
+        @MaxPeopleUpdate
+        Integer maxPeople
 ) {
 }
+
