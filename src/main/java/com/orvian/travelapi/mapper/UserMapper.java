@@ -9,6 +9,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import java.util.List;
+
 /*
     Mapper para a entidade de usuário.
     @Mapper é uma anotação do MapStruct que gera a implementação da interface em tempo de compilação.
@@ -25,4 +27,6 @@ public interface UserMapper {
     void updateEntityFromDto(UpdateUserDTO dto, @MappingTarget User user);
 
     UserSearchResultDTO toDTO(User user);
+
+    List<UserSearchResultDTO> toUserSearchResultDTOList(List<User> userList);
 }

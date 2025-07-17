@@ -1,11 +1,13 @@
 package com.orvian.travelapi.service.impl;
 
+import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.domain.repository.UserRepository;
 import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,10 +37,7 @@ public class UserServiceImpl implements UserService {
     public List<UserSearchResultDTO> findAll() {
         log.info("Retrieving all users");
         List<User> userList = userRepository.findAll();
-        List<UserSearchResultDTO> dtoList = userList.stream()
-                .map(userMapper::toDTO)
-                .toList();
-        return dtoList;
+        return userMapper.toUserSearchResultDTOList(userList);
     }
 
 
@@ -117,5 +116,13 @@ public class UserServiceImpl implements UserService {
         }
 
         return !user.getId().equals(userOptional.get().getId()) && userOptional.isPresent();
+    }
+
+    public User create(CreateUserDTO dto) {
+        User user = userMapper.toEntity(dto);
+        log.info("Creating user with email: {}", user.getEmail());
+        validateCreationAndUpdate(user);
+        log.info("User created with ID: {}", user.getId());
+        return userRepository.save(user);
     }
 }

@@ -62,10 +62,8 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> create(@RequestBody @Valid CreateUserDTO dto) {
-        User user = userMapper.toEntity(dto); // Converte o DTO para a entidade User
-        log.info("Creating user with email: {}", user.getEmail());
-        userService.create(user);
-
+        log.info("Creating user with email: {}", dto.email());
+        User user = userService.create(dto);
         URI location = generateHeaderLocation(user.getId()); // Gera a URI do novo usuário
         return ResponseEntity.created(location).build(); // Retorna o status 201 (Created) com a URI no cabeçalho Location
     }
