@@ -6,6 +6,7 @@ import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.domain.repository.TravelPackageRepository;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.TravelPackageService;
+import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,9 +24,6 @@ public class PackageServiceImpl implements TravelPackageService {
 
     public List<PackageSearchResultDTO> findAll() {
         List<TravelPackage> packages = travelPackageRepository.findAll();
-        if(packages == null || packages.isEmpty()) {
-            throw new NotFoundException("No travel packages found.");
-        }
         return travelPackageMapper.toPackageSearchResultDTOList(packages);
     }
 
@@ -39,14 +37,13 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public TravelPackage create(TravelPackage entity) {
+        validateCreationAndUpdate(entity);
         return travelPackageRepository.save(entity);
     }
 
     public TravelPackage create(CreateTravelPackageDTO dto) {
         TravelPackage travelPackage = travelPackageMapper.toTravelPackage(dto);
-        LocalDateTime localDateTime = LocalDateTime.now();
-        travelPackage.setCreatedAt(localDateTime);
-        travelPackage.setUpdatedAt(localDateTime);
+        validateCreationAndUpdate(travelPackage);
         return create(travelPackage);
     }
 
@@ -55,8 +52,8 @@ public class PackageServiceImpl implements TravelPackageService {
         if(entity.getId() == null || !travelPackageRepository.existsById(entity.getId())) {;
             throw new NotFoundException("Travel package with ID " + entity.getId() + " not found.");
         }
-        TravelPackage existingPackage = travelPackageRepository.findById(entity.getId())
-                .orElseThrow(() -> new NotFoundException("Travel package with ID " + entity.getId() + " not found."));
+        validateCreationAndUpdate(entity);
+        TravelPackage existingPackage = travelPackageRepository.findById(entity.getId()).get();
         entity.setCreatedAt(existingPackage.getCreatedAt());
         entity.setUpdatedAt(LocalDateTime.now());
         return travelPackageRepository.save(entity);
@@ -69,5 +66,21 @@ public class PackageServiceImpl implements TravelPackageService {
         } else {
             travelPackageRepository.deleteById(uuid);
         }
+    }
+
+    private void validateCreationAndUpdate(TravelPackage travelPackage) {
+        if (isDuplicatePackage(travelPackage)) {
+            throw new DuplicatedRegistryException("A travel package with the same data already exists.");
+        }
+    }
+
+    private boolean isDuplicatePackage(TravelPackage travelPackage) {
+        Optional<TravelPackage> packageOptional = travelPackageRepository.findByTitle(travelPackage.getTitle());
+
+        if (travelPackage.getId() == null) {
+            return packageOptional.isPresent();
+        }
+
+        return !travelPackage.getId().equals(packageOptional.get().getId()) && packageOptional.isPresent();
     }
 }

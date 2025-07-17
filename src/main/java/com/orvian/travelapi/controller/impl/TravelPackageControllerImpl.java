@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,15 +38,11 @@ public class TravelPackageControllerImpl implements GenericController {
     @Operation(summary = "Get all travel packages", description = "Fetches a list of all available travel packages.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Successfully retrieved all travel packages"),
-            @ApiResponse(responseCode = "404", description = "No travel packages found"),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<?> getAllPackages() {
+    public ResponseEntity<List<PackageSearchResultDTO>> getAllPackages() {
         log.info("Fetching all packages");
         List<PackageSearchResultDTO> packages = packageService.findAll();
-        if(packages.isEmpty()){
-            throw new NotFoundException("No travel packages found.");
-        }
         log.info("Total Packages found: {}", packages.size());
         return ResponseEntity.ok(packages);
     }
@@ -58,11 +55,12 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "409", description = "Package with the same data already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<TravelPackage> createPackage(@Valid @RequestBody CreateTravelPackageDTO dto) {
+    public ResponseEntity<Void> createPackage(@Valid @RequestBody CreateTravelPackageDTO dto) {
         log.info("Creating new travel package with details: {}", dto);
-        var createdPackage = packageService.create(dto);
+        TravelPackage createdPackage = packageService.create(dto);
         log.info("Travel package created successfully with ID: {}", createdPackage.getId());
-        return ResponseEntity.status(201).build();
+        URI location = generateHeaderLocation(createdPackage.getId());
+        return ResponseEntity.created(location).build();
     }
 
     @DeleteMapping("/{id}")
@@ -72,7 +70,7 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<?> deletePackage(@PathVariable UUID id) {
+    public ResponseEntity<Void> deletePackage(@PathVariable UUID id) {
         log.info("Deleting travel package with ID: {}", id);
         packageService.delete(id);
         log.info("Travel package deleted successfully");
@@ -88,13 +86,12 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "409", description = "Package with the same data already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<?> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
+    public ResponseEntity<Object> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
         log.info("Updating travel package with ID: {}", id);
         TravelPackage travelPackage = travelPackageMapper.toUpdateTravelPackage(dto);
-        travelPackage.setId(id);
         var updatedPackage = packageService.update(travelPackage);
         log.info("Travel package updated successfully with ID: {}", updatedPackage.getId());
-        return ResponseEntity.ok(updatedPackage);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}")
@@ -104,11 +101,16 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "404", description = "Travel package not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<?> getPackageById(@PathVariable UUID id) {
-        log.info("Fetching travel package with ID: {}", id);
-        var travelPackage = packageService.findById(id)
-                .orElseThrow(() -> new NotFoundException("Travel package with ID " + id + " not found."));
-        log.info("Travel package found with ID: {}", travelPackage.getId());
-        return ResponseEntity.ok(travelPackage);
+    public ResponseEntity<PackageSearchResultDTO> getPackageById(@PathVariable UUID id) {
+        return packageService.findById(id)
+                .map(travelPackage -> {
+                    PackageSearchResultDTO dto = travelPackageMapper.toPackageSearchResultDTO(travelPackage);
+                    log.info("Travel package found with ID: {}", id);
+                    return ResponseEntity.ok(dto);
+                })
+                .orElseGet( () -> {
+                    log.error("Travel package not found with ID: {}", id);
+                    throw new NotFoundException("Travel package not found with ID: " + id);
+                });
     }
 }
