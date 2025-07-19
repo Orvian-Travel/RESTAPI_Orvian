@@ -1,4 +1,8 @@
 package com.orvian.travelapi.service;
 
-public interface MediaService {
+import com.orvian.travelapi.domain.model.Media;
+
+import java.util.UUID;
+
+public interface MediaService extends CrudService<UUID, Media> {
 }
