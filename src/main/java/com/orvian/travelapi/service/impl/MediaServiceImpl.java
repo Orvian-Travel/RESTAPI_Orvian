@@ -31,8 +31,8 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public Media update(Media media) {
-        return mediaRepository.save(media);
+    public void update(UUID id, Record media) {
+
     }
 
     @Override

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+//TODO: refatorar o controller para centralizar a lógica na camada de serviço.
+
 /*
     Controller padrão para gerenciar usuários no sistema.
     Este controller permite criar, atualizar, buscar e deletar usuários.
@@ -89,19 +91,8 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Object> update(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
-        Optional<User> userOptional = userService.findById(id); // Busca o usuário pelo ID
-
-        if (userOptional.isEmpty()) {
-            log.error("User with id {} not found", id);
-            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 se o usuário não for encontrado
-        }
-
-        User user = userOptional.get(); // Obtém o usuário encontrado
-        userMapper.updateEntityFromDto(dto, user); // Atualiza o usuário com os dados do DTO, ignorando valores nulos
-
-        log.info("Updating user with id: {}", user.getId());
-        userService.update(user);
-
+        log.info("Updating user with id: {}", id);
+        userService.update(id, dto);
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a atualização for bem-sucedida
     }
 
@@ -170,16 +161,8 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        Optional<User> userOptional = userService.findById(id); // Busca o usuário pelo ID
-
-        if (userOptional.isEmpty()) {
-            log.error("User with id {} not found", id);
-            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 (Not Found) se o usuário não for encontrado
-        }
-
         log.info("Deleting user with id: {}", id);
         userService.delete(id);
-        log.info("User with id {} deleted successfully", id);
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a exclusão for bem-sucedida
     }
 }

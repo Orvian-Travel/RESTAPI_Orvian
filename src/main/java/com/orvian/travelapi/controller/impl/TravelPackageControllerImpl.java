@@ -88,18 +88,8 @@ public class TravelPackageControllerImpl implements GenericController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Object> updatePackage(@PathVariable UUID id, @Valid @RequestBody UpdateTravelPackageDTO dto) {
-        Optional<TravelPackage> packageOptional = packageService.findById(id);
-
-        if (packageOptional.isEmpty()) {
-            log.error("Travel package not found with ID: {}", id);
-            throw new NotFoundException("Travel package not found with ID: " + id);
-        }
-
-        TravelPackage travelPackage = packageOptional.get();
-        travelPackageMapper.updateEntityFromDto(dto, travelPackage);
-
-        packageService.update(travelPackage);
-
+        log.info("Updating Package with id: {}", id);
+        packageService.update(id, dto);
         return ResponseEntity.noContent().build();
     }
 

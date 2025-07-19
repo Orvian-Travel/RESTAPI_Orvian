@@ -2,6 +2,7 @@ package com.orvian.travelapi.service.impl;
 
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.domain.repository.TravelPackageRepository;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
@@ -9,6 +10,7 @@ import com.orvian.travelapi.service.TravelPackageService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PackageServiceImpl implements TravelPackageService {
     private final TravelPackageRepository travelPackageRepository;
@@ -48,9 +51,21 @@ public class PackageServiceImpl implements TravelPackageService {
     }
 
     @Override
-    public TravelPackage update(TravelPackage entity) {
-        validateCreationAndUpdate(entity);
-        return travelPackageRepository.save(entity);
+    public void update(UUID id, Record dto) {
+        Optional<TravelPackage> packageOptional = travelPackageRepository.findById(id);
+        if (packageOptional.isEmpty()) {
+            log.error("Travel package not found with ID: {}", id);
+            throw new NotFoundException("Travel package not found with ID: " + id);
+        }
+
+        TravelPackage travelPackage = packageOptional.get();
+        log.info("Updating Package with ID: {}", travelPackage.getId());
+        validateCreationAndUpdate(travelPackage);
+
+        travelPackageMapper.updateEntityFromDto((UpdateTravelPackageDTO) dto, travelPackage);
+
+        travelPackageRepository.save(travelPackage);
+        log.info("Package with ID: {} updated successfully", travelPackage.getId());
     }
 
     @Override

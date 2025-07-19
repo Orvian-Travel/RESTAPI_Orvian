@@ -1,7 +1,7 @@
 package com.orvian.travelapi.service;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface CrudService<ID, T> {
     Object findAll();
@@ -10,7 +10,7 @@ public interface CrudService<ID, T> {
 
     T create(T entity);
 
-    T update(T entity);
+    void update(UUID id, Record dto);
 
     void delete(ID id);
 }

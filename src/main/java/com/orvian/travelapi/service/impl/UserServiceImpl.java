@@ -1,13 +1,14 @@
 package com.orvian.travelapi.service.impl;
 
 import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 import com.orvian.travelapi.domain.repository.UserRepository;
 import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
-import jakarta.validation.Valid;
+import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -72,12 +73,21 @@ public class UserServiceImpl implements UserService {
          Se o usuário já existir, lança uma DuplicatedRegistryException.
      */
     @Override
-    public User update(User user) {
+    public void update(UUID id, Record dto) {
+        Optional<User> userOptional = userRepository.findById(id); // Busca o usuário pelo ID
+        if (userOptional.isEmpty()) {
+            log.error("User with id {} not found", id);
+            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 se o usuário não for encontrado
+        }
+
+        User user = userOptional.get(); // Obtém o usuário encontrado
         log.info("Updating user with ID: {}", user.getId());
         validateCreationAndUpdate(user);
+
+        userMapper.updateEntityFromDto((UpdateUserDTO) dto, user); // Atualiza o usuário com os dados do DTO, ignorando valores nulos
+
         User updatedUser = userRepository.save(user);
         log.info("User updated with ID: {}", updatedUser.getId());
-        return updatedUser;
     }
 
     /*
@@ -85,10 +95,16 @@ public class UserServiceImpl implements UserService {
          Ele registra a ação de exclusão e confirma a exclusão bem-sucedida.
      */
     @Override
-    public void delete(UUID uuid) {
-        log.info("Deleting user with ID: {}", uuid);
-        userRepository.deleteById(uuid);
-        log.info("User with ID: {} deleted successfully", uuid);
+    public void delete(UUID id) {
+        Optional<User> userOptional = userRepository.findById(id); // Busca o usuário pelo ID
+
+        if (userOptional.isEmpty()) {
+            log.error("User with id {} not found", id);
+            throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 (Not Found) se o usuário não for encontrado
+        }
+
+        userRepository.deleteById(id);
+        log.info("User with ID: {} deleted successfully", id);
     }
 
     /*
