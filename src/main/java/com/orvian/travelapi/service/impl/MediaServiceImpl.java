@@ -26,8 +26,8 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
-    public Media create(Media media) {
-        return mediaRepository.save(media);
+    public Media create(Record media) {
+        return null;
     }
 
     @Override

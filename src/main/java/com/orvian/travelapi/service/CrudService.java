@@ -1,14 +1,13 @@
 package com.orvian.travelapi.service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public interface CrudService<ID, T> {
     Object findAll();
 
-    Optional<T> findById(ID id);
+    T create(Record dto);
 
-    T create(T entity);
+    Object findById(ID id);
 
     void update(UUID id, Record dto);
 

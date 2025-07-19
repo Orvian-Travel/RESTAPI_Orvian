@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     /*
-       O método findAll() recupera todos os usuários do repositório,
+       O método getAllUsers() recupera todos os usuários do repositório,
        converte cada usuário em um UserSearchResultDTO e retorna a lista.
      */
     @Override
@@ -41,30 +41,30 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserSearchResultDTOList(userList);
     }
 
-
-    /**
-         O método findById() busca um usuário pelo ID.
-        Se o usuário for encontrado, retorna um Optional contendo o usuário.
-        Caso contrário, retorna um Optional vazio.
-     */
-    @Override
-    public Optional<User> findById(UUID id) {
-        log.info("Retrieving user with ID: {}", id);
-        return userRepository.findById(id);
-    }
-
     /*
          O método create() cria um novo usuário.
          Ele valida o usuário antes de salvá-lo no repositório e retorna o usuário salvo.
          Se o usuário já existir, lança uma DuplicatedRegistryException.
      */
     @Override
-    public User create(User user) {
+    public User create(Record dto) {
+        User user = userMapper.toEntity((CreateUserDTO) dto);
         log.info("Creating user with email: {}", user.getEmail());
         validateCreationAndUpdate(user);
-        User savedUser = userRepository.save(user);
-        log.info("User created with ID: {}", savedUser.getId());
-        return savedUser;
+        log.info("User created with ID: {}", user.getId());
+        return userRepository.save(user);
+    }
+
+    /**
+     O método getUserById() busca um usuário pelo ID.
+     Se o usuário for encontrado, retorna um Optional contendo o usuário.
+     Caso contrário, retorna um Optional vazio.
+     */
+    @Override
+    public UserSearchResultDTO findById(UUID id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new NotFoundException("User with id " + id + " not found."));
+        log.info("User found with id: {}", id);
+        return userMapper.toDTO(user);
     }
 
     /*
@@ -132,13 +132,5 @@ public class UserServiceImpl implements UserService {
         }
 
         return !user.getId().equals(userOptional.get().getId()) && userOptional.isPresent();
-    }
-
-    public User create(CreateUserDTO dto) {
-        User user = userMapper.toEntity(dto);
-        log.info("Creating user with email: {}", user.getEmail());
-        validateCreationAndUpdate(user);
-        log.info("User created with ID: {}", user.getId());
-        return userRepository.save(user);
     }
 }

@@ -6,8 +6,6 @@ import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
-import com.orvian.travelapi.mapper.UserMapper;
-import com.orvian.travelapi.service.exception.NotFoundException;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,13 +16,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 //TODO: refatorar o controller para centralizar a lógica na camada de serviço.
@@ -43,7 +39,6 @@ import java.util.UUID;
 public class UserControllerImpl implements GenericController {
 
     private final UserServiceImpl userService;
-    private final UserMapper userMapper;
 
     /*
         Cria um novo usuário com as credenciais fornecidas.
@@ -63,37 +58,11 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<Void> create(@RequestBody @Valid CreateUserDTO dto) {
+    public ResponseEntity<Void> createUser(@RequestBody @Valid CreateUserDTO dto) {
         log.info("Creating user with email: {}", dto.email());
         User user = userService.create(dto);
         URI location = generateHeaderLocation(user.getId()); // Gera a URI do novo usuário
         return ResponseEntity.created(location).build(); // Retorna o status 201 (Created) com a URI no cabeçalho Location
-    }
-
-    /*
-        Atualiza um usuário existente com as credenciais fornecidas.
-        @PutMapping é usado para mapear requisições HTTP PUT para este método.
-        @PathVariable é usado para extrair o ID do usuário da URL.
-        @Valid é usado para validar o DTO de entrada.
-        Retorna um ResponseEntity com o status 204 (No Content) se a atualização for bem-sucedida.
-        Erro 400 (Bad Request) é retornado se os dados de entrada forem inválidos.
-        Erro 404 (Not Found) é retornado se o usuário não for encontrado.
-        Erro 409 (Conflict) é retornado se já existir um usuário com as mesmas credenciais.
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
-    @PutMapping("/{id}")
-    @Operation(summary = "Update an existing user", description = "Updates the credentials of an existing user identified by ID.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "User updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
-    })
-    public ResponseEntity<Object> update(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
-        log.info("Updating user with id: {}", id);
-        userService.update(id, dto);
-        return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a atualização for bem-sucedida
     }
 
     /*
@@ -109,7 +78,7 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<List<UserSearchResultDTO>> findAll() {
+    public ResponseEntity<List<UserSearchResultDTO>> getAllUsers() {
         log.info("Fetching all users");
         List<UserSearchResultDTO> dtoList = userService.findAll();
         log.info("Total users found: {}", dtoList.size());
@@ -132,16 +101,34 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<UserSearchResultDTO> findById(@PathVariable UUID id) {
-        return userService.findById(id)
-                .map(user -> {
-                    UserSearchResultDTO dto = userMapper.toDTO(user); // Converte a entidade User para o DTO UserSearchResultDTO, se o usuário for encontrado
-                    log.info("User found with id: {}", id);
-                    return ResponseEntity.ok(dto); // Retorna o usuário encontrado com status 200 (OK)
-                }).orElseGet( () -> {
-                    log.error("User with id {} not found", id);
-                    throw new NotFoundException("User with id " + id + " not found."); // Retorna 404 (Not Found) se o usuário não for encontrado
-                });
+    public ResponseEntity<UserSearchResultDTO> getUserById(@PathVariable UUID id) {
+        return ResponseEntity.ok(userService.findById(id));
+    }
+
+    /*
+        Atualiza um usuário existente com as credenciais fornecidas.
+        @PutMapping é usado para mapear requisições HTTP PUT para este método.
+        @PathVariable é usado para extrair o ID do usuário da URL.
+        @Valid é usado para validar o DTO de entrada.
+        Retorna um ResponseEntity com o status 204 (No Content) se a atualização for bem-sucedida.
+        Erro 400 (Bad Request) é retornado se os dados de entrada forem inválidos.
+        Erro 404 (Not Found) é retornado se o usuário não for encontrado.
+        Erro 409 (Conflict) é retornado se já existir um usuário com as mesmas credenciais.
+        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "Update an existing user", description = "Updates the credentials of an existing user identified by ID.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+    })
+    public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
+        log.info("Updating user with id: {}", id);
+        userService.update(id, dto);
+        return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a atualização for bem-sucedida
     }
 
     /*
@@ -160,7 +147,7 @@ public class UserControllerImpl implements GenericController {
             @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         log.info("Deleting user with id: {}", id);
         userService.delete(id);
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a exclusão for bem-sucedida

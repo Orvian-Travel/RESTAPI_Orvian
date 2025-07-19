@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,23 +30,17 @@ public class PackageServiceImpl implements TravelPackageService {
     }
 
     @Override
-    public Optional<TravelPackage> findById(UUID uuid) {
-        if(uuid == null || !travelPackageRepository.existsById(uuid)) {
-            throw new NotFoundException("Travel package with ID " + uuid + " not found.");
-        }
-        return travelPackageRepository.findById(uuid);
+    public TravelPackage create(Record dto) {
+        TravelPackage travelPackage = travelPackageMapper.toTravelPackage((CreateTravelPackageDTO) dto);
+        validateCreationAndUpdate(travelPackage);
+        return travelPackageRepository.save(travelPackage);
     }
 
     @Override
-    public TravelPackage create(TravelPackage entity) {
-        validateCreationAndUpdate(entity);
-        return travelPackageRepository.save(entity);
-    }
-
-    public TravelPackage create(CreateTravelPackageDTO dto) {
-        TravelPackage travelPackage = travelPackageMapper.toTravelPackage(dto);
-        validateCreationAndUpdate(travelPackage);
-        return create(travelPackage);
+    public PackageSearchResultDTO findById(UUID id) {
+        TravelPackage travelPackage = travelPackageRepository.findById(id).orElseThrow(() -> new NotFoundException("Travel package with ID " + id + " not found."));
+        log.info("Travel package found with ID: {}", id);
+        return travelPackageMapper.toPackageSearchResultDTO(travelPackage);
     }
 
     @Override
@@ -69,12 +62,16 @@ public class PackageServiceImpl implements TravelPackageService {
     }
 
     @Override
-    public void delete(UUID uuid) {
-        if(uuid.equals(null) || !travelPackageRepository.existsById(uuid)){
-            throw new NotFoundException("Travel package with ID " + uuid + " not found.");
-        } else {
-            travelPackageRepository.deleteById(uuid);
-        }
+    public void delete(UUID id) {
+       Optional<TravelPackage> packageOptional = travelPackageRepository.findById(id);
+
+       if (packageOptional.isEmpty()) {
+           log.error("Travel package not found with ID: {}", id);
+           throw new NotFoundException("Travel package with ID " + id + " not found.");
+       }
+
+       travelPackageRepository.deleteById(id);
+       log.info("Travel package with ID: {} deleted successfully", id);
     }
 
     private void validateCreationAndUpdate(TravelPackage travelPackage) {

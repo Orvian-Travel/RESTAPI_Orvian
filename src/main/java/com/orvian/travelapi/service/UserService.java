@@ -11,5 +11,4 @@ public interface UserService extends CrudService<UUID, User> {
              Ele valida o usuário antes de salvá-lo no repositório e retorna o usuário atualizado.
              Se o usuário já existir, lança uma DuplicatedRegistryException.
          */
-
 }
