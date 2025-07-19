@@ -1,9 +1,6 @@
 package com.orvian.travelapi.controller.dto.user;
 
-import com.orvian.travelapi.annotation.Adult;
-import com.orvian.travelapi.annotation.Document;
-import com.orvian.travelapi.annotation.Password;
-import com.orvian.travelapi.annotation.Phone;
+import com.orvian.travelapi.annotation.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
@@ -43,6 +40,8 @@ public record UpdateUserDTO(
         String document,
         @Adult
         @Schema(name = "birthDate", description = "User's birth date in ISO format (YYYY-MM-DD)", example = "1990-01-01")
-        LocalDate birthDate
+        LocalDate birthDate,
+        @ValidRole
+        String role
 ) {
 }

@@ -50,10 +50,6 @@ public record CreateUserDTO(
         @NotNull(message = "Birth date is required")
         @Adult
         @Schema(name = "birthDate", description = "User's birth date in ISO format (YYYY-MM-DD)", example = "1990-01-01")
-        LocalDate birthDate,
-        @NotBlank(message = "Role is required")
-        @Size(max = 20, message = "Role must be at most 20 characters long")
-        @Schema(name = "role", description = "User's role in the system", example = "USER")
-        String role
+        LocalDate birthDate
 ) {
 }
