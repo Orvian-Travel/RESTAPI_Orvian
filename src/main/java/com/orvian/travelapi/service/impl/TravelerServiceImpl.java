@@ -94,7 +94,7 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     public boolean isDuplicateTraveler(Traveler traveler){
-        Optional<Traveler> travelerOptional = travelerRepository.findbyEmailOrCpf(traveler.getEmail(), traveler.getCpf());
+        Optional<Traveler> travelerOptional = travelerRepository.findByEmailOrCpf(traveler.getEmail(), traveler.getCpf());
 
         if (traveler.getId() == null){
             return travelerOptional.isPresent();

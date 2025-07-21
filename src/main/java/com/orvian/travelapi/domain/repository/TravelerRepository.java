@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface TravelerRepository extends JpaRepository<Traveler, UUID> {
     // metodo para buscar todos os viajantes de uma reserva
-    Optional<List<Traveler>> findByReservation(Reservation reservation);
+    //Optional<List<Traveler>> findByReservation(Reservation reservation);
 
-    Optional<Traveler> findbyEmailOrCpf(String email, String cpf);
+    Optional<Traveler> findByEmailOrCpf(String email, String cpf);
 }
