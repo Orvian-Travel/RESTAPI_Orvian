@@ -124,10 +124,9 @@ public enum Status {
 - `phone` (String, obrigatório): Telefone do usuário. Máx. 15 caracteres, formato válido.
 - `document` (String, obrigatório): Documento de identificação (8-14 caracteres, formatos aceitos: CPF, RG, passaporte).
 - `birthDate` (LocalDate, obrigatório): Data de nascimento (ISO, ex: 1990-01-01, deve ser maior de idade).
-- `role` (String, obrigatório): Papel do usuário no sistema. Máx. 20 caracteres.
 
 ##### UpdateUserDTO
-- Todos os campos são opcionais, seguem as mesmas regras de validação do `CreateUserDTO`, exceto `role`.
+- Todos os campos são opcionais, seguem as mesmas regras de validação do `CreateUserDTO`, com a adição do campo `role`.
 
 ##### UserSearchResultDTO
 - `id` (UUID): Identificador único do usuário.
