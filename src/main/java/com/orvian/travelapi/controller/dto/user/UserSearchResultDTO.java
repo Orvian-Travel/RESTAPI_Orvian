@@ -17,17 +17,17 @@ import java.util.UUID;
         title = "User Search Result DTO"
 )
 public record UserSearchResultDTO(
-        @Schema(name = "id", description = "User's unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
+        @Schema(name = "id", description = "Identificação única do usuário", example = "123e4567-e89b-12d3-a456-426614174000")
         UUID id,
-        @Schema(name = "name", description = "User's full name", example = "John Doe")
+        @Schema(name = "name", description = "Nome completo do usuário", example = "John Doe")
         String name,
-        @Schema(name = "email", description = "User's email address", example = "example@example.com")
+        @Schema(name = "email", description = "Endereço de email do usuário", example = "exemplo@exemplo.com")
         String email,
-        @Schema(name = "phone", description = "User's phone number", example = "(12) 34567-8901")
+        @Schema(name = "phone", description = "Número de celular do usuário", example = "(12) 34567-8910")
         String phone,
-        @Schema(name = "document", description = "User's document number", example = "123.456.789-10 or AZ123456")
+        @Schema(name = "document", description = "Documento de identificação do usuário", example = "123.456.789-10 ou AZ123456")
         String document,
-        @Schema(name = "birthDate", description = "User's date of birth in ISO format (YYYY-MM-DD)", example = "1990-01-01")
+        @Schema(name = "birthDate", description = "Data de nascimento do usuário no formato ISO (AAAA-MM-DD)", example = "1990-01-01")
         LocalDate birthDate
 ) {
 }

@@ -23,8 +23,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-//TODO: refatorar o controller para centralizar a lógica na camada de serviço.
-
 /*
     Controller padrão para gerenciar usuários no sistema.
     Este controller permite criar, atualizar, buscar e deletar usuários.
@@ -35,7 +33,7 @@ import java.util.UUID;
 @RequestMapping("/api/v1/users")
 @Slf4j
 @RequiredArgsConstructor
-@Tag(name = "User Management", description = "Operations related to user management")
+@Tag(name = "Gerenciamento de Usuário", description = "Operações relacionadas ao gerenciamnento de usuário")
 public class UserControllerImpl implements GenericController {
 
     private final UserServiceImpl userService;
@@ -51,12 +49,12 @@ public class UserControllerImpl implements GenericController {
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
     @PostMapping
-    @Operation(summary = "Create a new user", description = "Creates a new user with the provided credentials.")
+    @Operation(summary = "Criar um novo Usuário", description = "Cria um novo usuário com as credenciais oferecidas.")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "User created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+            @ApiResponse(responseCode = "201", description = "Usuário criado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Usuário com as mesmas credenciais ja existente", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> createUser(@RequestBody @Valid CreateUserDTO dto) {
         log.info("Creating user with email: {}", dto.email());
@@ -73,10 +71,10 @@ public class UserControllerImpl implements GenericController {
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
     @GetMapping
-    @Operation(summary = "Find all users", description = "Retrieves a list of all registered users.")
+    @Operation(summary = "Buscar todos os usuários", description = "Recupera a lista de todos os usuários registrados.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Users retrieved successfully"),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+            @ApiResponse(responseCode = "200", description = "Usuários recuperados com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<List<UserSearchResultDTO>> getAllUsers() {
         log.info("Fetching all users");
@@ -95,11 +93,11 @@ public class UserControllerImpl implements GenericController {
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
     @GetMapping("/{id}")
-    @Operation(summary = "Find a user by ID", description = "Retrieves a user identified by ID.")
+    @Operation(summary = "Buscar um usuário pelo ID", description = "Recupera um usuário identificando pelo ID.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "User found"),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+            @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<UserSearchResultDTO> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.findById(id));
@@ -117,13 +115,13 @@ public class UserControllerImpl implements GenericController {
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
     @PutMapping("/{id}")
-    @Operation(summary = "Update an existing user", description = "Updates the credentials of an existing user identified by ID.")
+    @Operation(summary = "Atualiza um usuário existente", description = "Atualiza as credenciais de um usuário existente, identificando pelo ID.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "User updated successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "409", description = "User with the same credentials already exists", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+            @ApiResponse(responseCode = "204", description = "Usuário atualizado ocm sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "409", description = "Usuário com as mesmas credenciais ja existente", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
         log.info("Updating user with id: {}", id);
@@ -141,11 +139,11 @@ public class UserControllerImpl implements GenericController {
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a user", description = "Deletes a user identified by ID.")
+    @Operation(summary = "Excluir um usuário", description = "Exclui um usuário identificando pelo ID.")
     @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
-            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+            @ApiResponse(responseCode = "204", description = "Usuário excluído com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         log.info("Deleting user with id: {}", id);
