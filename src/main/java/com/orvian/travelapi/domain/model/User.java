@@ -1,13 +1,18 @@
 package com.orvian.travelapi.domain.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 /*
     A entidade Usúario representa um usuário do sistema.
@@ -22,11 +27,7 @@ import java.util.UUID;
 @Table(name = "TB_USERS")
 @Getter
 @Setter
-@Schema(
-        description = "User entity representing a user in the system.",
-        title = "User",
-        name = "User"
-)
+@Schema(description = "User entity representing a user in the system.", title = "User", name = "User")
 public class User {
 
     @Id
