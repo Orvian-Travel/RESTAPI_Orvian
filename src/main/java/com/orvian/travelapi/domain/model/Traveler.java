@@ -30,7 +30,7 @@ public class Traveler {
     private String name;
 
     // email esta unico no BD, mas aqui não pode ter o caso de ter o mesmo viajante em outras reservas (outras datas)?
-    @Column(name = "EMAIL", length = 150, nullable = false, unique = true)
+    @Column(name = "EMAIL", length = 150, nullable = false)
     @Schema(name = "email", description = "Traveler's email address", example = "example@example.com")
     private String email;
 
