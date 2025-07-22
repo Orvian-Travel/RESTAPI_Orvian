@@ -12,7 +12,7 @@ import java.lang.annotation.*;
 @Target( {ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PriceUpdate {
-    String message() default "Max people must be at least 1.";
+    String message() default "Price must be at least 10.0.";
 
     Class<?>[] groups() default {};
 
