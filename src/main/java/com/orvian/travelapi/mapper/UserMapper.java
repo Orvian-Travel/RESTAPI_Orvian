@@ -17,13 +17,13 @@ import java.util.List;
     O componenteModel = "spring" permite que o MapStruct gere um bean Spring, facilitando a injeção de dependências.
     O @BeanMapping com nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE serve para ignorar os valores nulos na hora de fazer o mapeamento de atualização.
  */
-
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @BeanMapping(ignoreByDefault = true)
     User toEntity(CreateUserDTO dto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, ignoreByDefault = true)
     void updateEntityFromDto(UpdateUserDTO dto, @MappingTarget User user);
 
     UserSearchResultDTO toDTO(User user);

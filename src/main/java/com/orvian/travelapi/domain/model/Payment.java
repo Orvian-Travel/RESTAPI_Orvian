@@ -1,5 +1,6 @@
 package com.orvian.travelapi.domain.model;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
@@ -34,7 +35,7 @@ public class Payment {
 
     @Column(name = "VALUE_PAID", nullable = false, precision = 10, scale = 2)
     @Schema(name = "valuePaid", description = "Amount paid in the payment transaction", example = "100.00")
-    private Double valuePaid;
+    private BigDecimal valuePaid;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_METHOD", nullable = false, length = 15)
@@ -52,7 +53,7 @@ public class Payment {
     private Date paymentApprovedAt;
 
     @Column(name = "TAX")
-    @Schema(name = "tax", description = "Tax amount applied to the payment", example = "10.00")
+    @Schema(name = "tax", description = "Tax amount applied to the payment", example = "10.00%")
     private Double tax;
 
     @Column(name = "INSTALLMENT")
@@ -61,7 +62,7 @@ public class Payment {
 
     @Column(name = "INSTALLMENT_AMOUNT", precision = 10, scale = 2)
     @Schema(name = "installmentAmount", description = "Amount for each installment", example = "50.00")
-    private Double installmentAmount;
+    private BigDecimal installmentAmount;
 
     @Column(name = "CREATED_AT", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

@@ -6,20 +6,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.orvian.travelapi.validator.DurationUpdateValidator;
+import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorForDouble;
+import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorForInteger;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 @Documented
-@Constraint(validatedBy = DurationUpdateValidator.class)
+@Constraint(validatedBy = {ValueGreaterOrEqualZeroValidatorForDouble.class, ValueGreaterOrEqualZeroValidatorForInteger.class})
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface DurationUpdate {
+public @interface ValueGreaterOrEqualZero {
 
-    String message() default "Duration must be at least 1 day.";
+    String message() default "The value must be greather than or equal 0";
 
     Class<?>[] groups() default {};
 
     Class<? extends Payload>[] payload() default {};
+
 }

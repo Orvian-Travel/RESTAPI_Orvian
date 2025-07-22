@@ -21,8 +21,6 @@ public interface TravelPackageMapper {
 
     List<PackageSearchResultDTO> toPackageSearchResultDTOList(List<TravelPackage> entities);
 
-    TravelPackage toUpdateTravelPackage(UpdateTravelPackageDTO dto);
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(UpdateTravelPackageDTO dto, @MappingTarget TravelPackage travelPackage);
 }

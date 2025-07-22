@@ -40,4 +40,6 @@ public class PaymentServiceImpl implements PaymentService {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     // TODO implement do serviço Payment
+
+    // TODO DTOs de payments
 }

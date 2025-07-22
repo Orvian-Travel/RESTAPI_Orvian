@@ -21,9 +21,11 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 public class PackageServiceImpl implements TravelPackageService {
+
     private final TravelPackageRepository travelPackageRepository;
     private final TravelPackageMapper travelPackageMapper;
 
+    @Override
     public List<PackageSearchResultDTO> findAll() {
         List<TravelPackage> packages = travelPackageRepository.findAll();
         return travelPackageMapper.toPackageSearchResultDTOList(packages);
@@ -63,15 +65,15 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public void delete(UUID id) {
-       Optional<TravelPackage> packageOptional = travelPackageRepository.findById(id);
+        Optional<TravelPackage> packageOptional = travelPackageRepository.findById(id);
 
-       if (packageOptional.isEmpty()) {
-           log.error("Travel package not found with ID: {}", id);
-           throw new NotFoundException("Travel package with ID " + id + " not found.");
-       }
+        if (packageOptional.isEmpty()) {
+            log.error("Travel package not found with ID: {}", id);
+            throw new NotFoundException("Travel package with ID " + id + " not found.");
+        }
 
-       travelPackageRepository.deleteById(id);
-       log.info("Travel package with ID: {} deleted successfully", id);
+        travelPackageRepository.deleteById(id);
+        log.info("Travel package with ID: {} deleted successfully", id);
     }
 
     private void validateCreationAndUpdate(TravelPackage travelPackage) {
