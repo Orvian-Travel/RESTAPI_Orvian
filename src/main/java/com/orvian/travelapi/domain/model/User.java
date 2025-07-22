@@ -61,7 +61,7 @@ public class User {
 
     @Column(name = "ROLE", nullable = false, length = 20)
     @Schema(name = "role", description = "User's role in the system", example = "USER")
-    private String role;
+    private String  role = "USER";
 
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the user was created", example = "2023-10-01T12:00:00")

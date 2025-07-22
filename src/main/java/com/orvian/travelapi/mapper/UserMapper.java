@@ -20,10 +20,9 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    @BeanMapping(ignoreByDefault = true)
     User toEntity(CreateUserDTO dto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, ignoreByDefault = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(UpdateUserDTO dto, @MappingTarget User user);
 
     UserSearchResultDTO toDTO(User user);
