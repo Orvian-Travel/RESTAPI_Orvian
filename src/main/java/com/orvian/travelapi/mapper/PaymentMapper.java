@@ -14,10 +14,9 @@ import com.orvian.travelapi.domain.model.Payment;
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
 
-    @BeanMapping(ignoreByDefault = true)
     Payment toEntity(CreatePaymentDTO dto);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, ignoreByDefault = true)
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(CreatePaymentDTO dto, @MappingTarget Payment payment);
 
     PaymentSearchResultDTO toDTO(Payment payment);
