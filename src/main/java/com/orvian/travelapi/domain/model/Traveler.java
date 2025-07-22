@@ -42,9 +42,10 @@ public class Traveler {
     @Schema(name = "birthDate", description = "Traveler's birth date in ISO format (YYYY-MM-DD)", example = "1990-01-01")
     private LocalDate birthDate;
 
-//    relação com as reservas (comentado caso não esteja totalmente implementado na outra ponta)
-//    @JoinColumn(name = "ID_RESERVATION", nullable = false)
-//    private Reservation reservation;
+    // relação com as reservas (comentado caso não esteja totalmente implementado na outra ponta)
+    @JoinColumn(name = "ID_RESERVATION", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Reservation reservation;
 
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the traveler was created", example = "2023-10-01T12:00:00")
