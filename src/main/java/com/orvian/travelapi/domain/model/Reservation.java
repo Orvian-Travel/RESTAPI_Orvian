@@ -15,6 +15,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class Reservation {
+
     @Id
     @GeneratedValue
     @Column(name = "ID", columnDefinition = "uniqueidentifier", updatable = false, nullable = false)
@@ -43,7 +44,6 @@ public class Reservation {
     // @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)
     // @Schema(name = "idPackageDate", description = "Travel package date associated with the reservation", example = "123e4567-e89b-12d3-a456-426614174001")
     // private PackageDate packageDate;
-
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the reservation was created", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt = LocalDateTime.now();

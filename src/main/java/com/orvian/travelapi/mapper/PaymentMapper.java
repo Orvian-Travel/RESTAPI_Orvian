@@ -1,3 +1,4 @@
+
 package com.orvian.travelapi.mapper;
 
 import java.util.List;
@@ -11,13 +12,14 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.domain.model.Payment;
 
+
 @Mapper(componentModel = "spring")
 public interface PaymentMapper {
 
     Payment toEntity(CreatePaymentDTO dto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromDto(CreatePaymentDTO dto, @MappingTarget Payment payment);
+    void updateEntityFromDTO(CreatePaymentDTO dto, @MappingTarget Payment payment);
 
     PaymentSearchResultDTO toDTO(Payment payment);
 
