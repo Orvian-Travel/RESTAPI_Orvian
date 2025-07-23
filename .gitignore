@@ -4,8 +4,10 @@ target/
 .env
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
-!**/src/test/**/target/
+!**/src/test/**/
+target/
 /logs/
+bin/
 
 ### STS ###
 .apt_generated
