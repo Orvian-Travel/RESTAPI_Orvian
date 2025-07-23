@@ -1,15 +1,16 @@
 package com.orvian.travelapi.mapper;
 
-import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
-import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
-import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
-import com.orvian.travelapi.domain.model.User;
+import java.util.List;
+
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.List;
+import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
+import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
+import com.orvian.travelapi.domain.model.User;
 
 /*
     Mapper para a entidade de usuário.
@@ -17,7 +18,7 @@ import java.util.List;
     O componenteModel = "spring" permite que o MapStruct gere um bean Spring, facilitando a injeção de dependências.
     O @BeanMapping com nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE serve para ignorar os valores nulos na hora de fazer o mapeamento de atualização.
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", config = MapStructConfig.class)
 public interface UserMapper {
 
     User toEntity(CreateUserDTO dto);

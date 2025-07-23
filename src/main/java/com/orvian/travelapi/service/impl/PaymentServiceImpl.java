@@ -1,5 +1,6 @@
 package com.orvian.travelapi.service.impl;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -7,11 +8,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
+import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.mapper.PaymentMapper;
 import com.orvian.travelapi.service.PaymentService;
 import com.orvian.travelapi.service.exception.BusinessException;
+import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 
 import jakarta.transaction.Transactional;
@@ -28,7 +31,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
 
     @Override
-    public Object findAll() {
+    public List<PaymentSearchResultDTO> findAll() {
         log.info("Retrieving all payments");
         return paymentMapper.toPaymentSearchResultDTOList(paymentRepository.findAll());
 
@@ -42,7 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (paymentRepository.existsById(payment.getId())) {
             String errorMsg = "Payment with ID " + payment.getId() + " already exists";
             log.error(errorMsg);
-            throw new BusinessException(errorMsg);
+            throw new DuplicatedRegistryException(errorMsg);
         }
 
         try {
@@ -62,7 +65,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public Object findById(UUID id) {
+    public PaymentSearchResultDTO findById(UUID id) {
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Payment not found with ID: " + id));
         log.info("Payment found with id: {}", id);
@@ -100,7 +103,17 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public void delete(UUID id) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        Optional<Payment> paymentOptional = paymentRepository.findById(id);
+
+        if (paymentOptional.isEmpty()) {
+            log.error("Payment not found with ID: {}", id);
+            throw new NotFoundException("Payment not found with ID: " + id);
+        }
+
+        Payment payment = paymentOptional.get();
+        log.info("Deleting payment with ID: {}", id);
+        paymentRepository.delete(payment);
+        log.info("Payment deleted with ID: {}", id);
     }
 
     private void handleErrorSQL(DataIntegrityViolationException e) {

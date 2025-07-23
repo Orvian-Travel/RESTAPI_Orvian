@@ -1,18 +1,18 @@
 package com.orvian.travelapi.mapper;
 
-import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
-import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
-import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
-import com.orvian.travelapi.domain.model.TravelPackage;
-import jakarta.validation.Valid;
+import java.util.List;
+
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.List;
+import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
+import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
+import com.orvian.travelapi.domain.model.TravelPackage;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", config = MapStructConfig.class)
 public interface TravelPackageMapper {
 
     TravelPackage toTravelPackage(CreateTravelPackageDTO dto);

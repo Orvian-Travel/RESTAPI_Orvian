@@ -1,6 +1,7 @@
 package com.orvian.travelapi.domain.model;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -67,10 +68,10 @@ public class Payment {
     @Column(name = "CREATED_AT", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @Schema(name = "createdAt", description = "Timestamp when the PAYMENT was created", example = "2023-10-01T12:00:00")
-    private Date createdAt = new Date();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(name = "UPDATED_AT", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     @Schema(name = "updatedAt", description = "Timestamp when the PAYMENT was last updated", example = "2023-10-01T12:00:00")
-    private Date updatedAt = new Date();
+    private LocalDateTime updatedAt = LocalDateTime.now();
 }

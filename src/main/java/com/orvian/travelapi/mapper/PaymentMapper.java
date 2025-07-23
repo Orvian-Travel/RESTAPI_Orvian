@@ -1,4 +1,3 @@
-
 package com.orvian.travelapi.mapper;
 
 import java.util.List;
@@ -12,8 +11,7 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.domain.model.Payment;
 
-
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", config = MapStructConfig.class)
 public interface PaymentMapper {
 
     Payment toEntity(CreatePaymentDTO dto);

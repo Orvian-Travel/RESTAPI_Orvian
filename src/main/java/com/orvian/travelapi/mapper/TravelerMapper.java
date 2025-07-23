@@ -1,15 +1,16 @@
 package com.orvian.travelapi.mapper;
 
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+
 import com.orvian.travelapi.controller.dto.traveler.CreateTravelerDTO;
 import com.orvian.travelapi.controller.dto.traveler.TravelerSearchResultDTO;
 import com.orvian.travelapi.controller.dto.traveler.UpdateTravelerDTO;
 import com.orvian.travelapi.domain.model.Traveler;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
 
-import java.util.List;
-
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", config = MapStructConfig.class)
 public interface TravelerMapper {
 
     Traveler toEntity(CreateTravelerDTO dto);
