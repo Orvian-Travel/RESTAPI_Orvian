@@ -32,6 +32,6 @@ public record CreatePaymentDTO(
         @Schema(name = "installmentAmount", description = "Installment amount for the payment", example = "100.00")
         @ValueGreaterOrEqualZero
         BigDecimal installmentAmount
-        ) {
+        ) implements PaymentInstallmentData {
 
 }

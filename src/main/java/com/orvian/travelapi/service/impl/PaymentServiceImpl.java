@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
+import com.orvian.travelapi.controller.dto.payment.UpdatePaymentDTO;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.mapper.PaymentMapper;
@@ -80,11 +81,11 @@ public class PaymentServiceImpl implements PaymentService {
             throw new NotFoundException("Payment not found with ID: " + id);
         }
 
-        Payment payment = paymentOptional.get();
-        log.info("Updating payment with ID: {}", id);
-        paymentMapper.updateEntityFromDTO((CreatePaymentDTO) dto, payment);
-
         try {
+            Payment payment = paymentOptional.get();
+            log.info("Updating payment with ID: {}", id);
+            paymentMapper.updateEntityFromDTO((UpdatePaymentDTO) dto, payment);
+
             paymentRepository.save(payment);
             log.info("Payment updated with ID: {}", payment.getId());
 
