@@ -3,6 +3,7 @@ package com.orvian.travelapi.controller.exception;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -97,6 +98,13 @@ public class GlobalExceptionHandler {
     public ResponseErrorDTO handleRuntimeException(RuntimeException e, HttpServletRequest request) {
         String path = request.getRequestURI();
         return ResponseErrorDTO.of(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", List.of(), path);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseErrorDTO handleJsonParseError(HttpMessageNotReadableException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return ResponseErrorDTO.of(HttpStatus.BAD_REQUEST, "Erro ao ler JSON: " + e.getMessage(), List.of(), path);
     }
 
 }

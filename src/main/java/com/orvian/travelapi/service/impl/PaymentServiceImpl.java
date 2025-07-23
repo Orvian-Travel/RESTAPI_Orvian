@@ -14,7 +14,6 @@ import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.mapper.PaymentMapper;
 import com.orvian.travelapi.service.PaymentService;
 import com.orvian.travelapi.service.exception.BusinessException;
-import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 
 import jakarta.transaction.Transactional;
@@ -32,23 +31,24 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public List<PaymentSearchResultDTO> findAll() {
-        log.info("Retrieving all payments");
-        return paymentMapper.toPaymentSearchResultDTOList(paymentRepository.findAll());
+        try {
+            log.info("Retrieving all payments");
+            List<Payment> payments = paymentRepository.findAll();
+            return paymentMapper.toPaymentSearchResultDTOList(payments);
+        } catch (Exception e) {
+            log.error("Error fetching payments: {}", e.getMessage(), e);
+            throw new NotFoundException("Erro ao buscar pagamentos: " + e.getMessage());
+        }
 
     }
 
     @Override
     public Payment create(Record dto) {
-        Payment payment = paymentMapper.toEntity((CreatePaymentDTO) dto);
-        log.info("Creating payment with ID: {}", payment.getId());
-
-        if (paymentRepository.existsById(payment.getId())) {
-            String errorMsg = "Payment with ID " + payment.getId() + " already exists";
-            log.error(errorMsg);
-            throw new DuplicatedRegistryException(errorMsg);
-        }
 
         try {
+            Payment payment = paymentMapper.toEntity((CreatePaymentDTO) dto);
+            log.info("Creating payment with VALUE_PAID: {}", payment.getValuePaid());
+
             Payment savedPayment = paymentRepository.save(payment);
             log.info("Payment created with ID: {}", savedPayment.getId());
             return savedPayment;

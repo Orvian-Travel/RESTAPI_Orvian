@@ -10,6 +10,7 @@ import com.orvian.travelapi.domain.enums.PaymentStatus;
 import com.orvian.travelapi.domain.model.Payment;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
+
     List<Payment> findByStatus(PaymentStatus status);
 
     List<Payment> findByPaymentMethod(PaymentMethod paymentMethod);

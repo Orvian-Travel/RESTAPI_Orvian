@@ -7,12 +7,13 @@ import java.util.UUID;
 
 import com.orvian.travelapi.domain.enums.PaymentMethod;
 import com.orvian.travelapi.domain.enums.PaymentStatus;
+import com.orvian.travelapi.domain.enums.converter.PaymentMethodConverter;
+import com.orvian.travelapi.domain.enums.converter.PaymentStatusConverter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,13 +39,14 @@ public class Payment {
     @Schema(name = "valuePaid", description = "Amount paid in the payment transaction", example = "100.00")
     private BigDecimal valuePaid;
 
-    @Enumerated(EnumType.STRING)
+    // @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_METHOD", nullable = false, length = 15)
+    @Convert(converter = PaymentMethodConverter.class)
     @Schema(name = "paymentMethod", description = "Payment method used for the transaction", example = "CREDIT_CARD")
     private PaymentMethod paymentMethod;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "PAYMENT_STATUS", nullable = false, length = 15)
+    @Convert(converter = PaymentStatusConverter.class)
     @Schema(name = "status", description = "Current status of the payment", example = "COMPLETED")
     private PaymentStatus status;
 

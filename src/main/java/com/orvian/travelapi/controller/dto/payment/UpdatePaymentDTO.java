@@ -8,8 +8,6 @@ import com.orvian.travelapi.domain.enums.PaymentMethod;
 import com.orvian.travelapi.domain.enums.PaymentStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Size;
 
 @InstallmentTotalValid
@@ -21,11 +19,9 @@ public record UpdatePaymentDTO(
         BigDecimal valuePaid,
         @Size(max = 15, message = "Payment method must be at most 15 characters long")
         @Schema(name = "paymentMethod", description = "Método de pagamento utilizado", example = "CRÉDITO")
-        @Enumerated(EnumType.STRING)
         PaymentMethod paymentMethod,
         @Size(max = 15, message = "Status must be at most 15 characters long")
         @Schema(name = "status", description = "Status atual do pagamento", example = "APROVADO")
-        @Enumerated(EnumType.STRING)
         PaymentStatus status,
         @Schema(name = "tax", description = "Taxa aplicada ao pagamento", example = "10.00%")
         @ValueGreaterOrEqualZero
