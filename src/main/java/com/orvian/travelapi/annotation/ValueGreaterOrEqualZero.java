@@ -6,14 +6,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorForDouble;
-import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorForInteger;
+import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorTypes.ValidatorForBIgDecimal;
+import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorTypes.ValidatorForDouble;
+import com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorTypes.ValidatorForInteger;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
 @Documented
-@Constraint(validatedBy = {ValueGreaterOrEqualZeroValidatorForDouble.class, ValueGreaterOrEqualZeroValidatorForInteger.class})
+@Constraint(validatedBy = {ValidatorForBIgDecimal.class, ValidatorForDouble.class, ValidatorForInteger.class})
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValueGreaterOrEqualZero {

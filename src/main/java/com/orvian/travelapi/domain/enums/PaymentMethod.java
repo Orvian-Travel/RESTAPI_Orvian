@@ -4,5 +4,9 @@ public enum PaymentMethod {
     CREDITO,
     DEBITO,
     BOLETO,
-    PIX
+    PIX;
+
+    public static PaymentMethod fromString(String value) {
+        return PaymentMethod.valueOf(value.trim().toUpperCase());
+    }
 }

@@ -3,6 +3,7 @@ package com.orvian.travelapi.controller.dto.payment;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 import com.orvian.travelapi.domain.enums.PaymentMethod;
 import com.orvian.travelapi.domain.enums.PaymentStatus;
@@ -14,6 +15,8 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
 public record PaymentSearchResultDTO(
+        @Schema(name = "id", description = "Identificação única do pagamento", example = "123e4567-e89b-12d3-a456-426614174000")
+        UUID id,
         @Schema(name = "valuePaid", description = "Valor pago no pagamento", example = "100.00")
         BigDecimal valuePaid,
         @Schema(name = "paymentMethod", description = "Método de pagamento utilizado", example = "CRÉDITO")

@@ -1,11 +1,11 @@
-package com.orvian.travelapi.validator;
+package com.orvian.travelapi.validator.ValueGreaterOrEqualZeroValidatorTypes;
 
 import com.orvian.travelapi.annotation.ValueGreaterOrEqualZero;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class ValueGreaterOrEqualZeroValidatorForInteger implements ConstraintValidator<ValueGreaterOrEqualZero, Integer> {
+public class ValidatorForInteger implements ConstraintValidator<ValueGreaterOrEqualZero, Integer> {
 
     @Override
     public boolean isValid(Integer value, ConstraintValidatorContext context) {

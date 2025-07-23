@@ -51,9 +51,11 @@ public class PaymentControllerImpl implements GenericController {
     })
     public ResponseEntity<Void> createPayment(@RequestBody @Valid CreatePaymentDTO dto) {
         log.info("Creating payment with value: {}", dto.valuePaid());
+
         Payment payment = paymentService.create(dto);
-        URI location = generateHeaderLocation(payment.getId()); // Gera a URI do novo usuário
-        return ResponseEntity.created(location).build();
+
+        URI location = generateHeaderLocation(payment.getId()); // Gera a URI do novo pagamento
+        return ResponseEntity.created(location).build(); // Retorna 201 (Created) com a URI no cabeçalho Location
     }
 
     @GetMapping
