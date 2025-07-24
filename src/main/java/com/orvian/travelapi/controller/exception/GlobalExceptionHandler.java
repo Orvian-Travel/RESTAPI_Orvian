@@ -2,6 +2,7 @@ package com.orvian.travelapi.controller.exception;
 
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -105,6 +106,18 @@ public class GlobalExceptionHandler {
     public ResponseErrorDTO handleJsonParseError(HttpMessageNotReadableException e, HttpServletRequest request) {
         String path = request.getRequestURI();
         return ResponseErrorDTO.of(HttpStatus.BAD_REQUEST, "Erro ao ler JSON: " + e.getMessage(), List.of(), path);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ResponseErrorDTO handleDataIntegrityViolationException(DataIntegrityViolationException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        String message = "Database integrity error";
+        Throwable root = e.getRootCause();
+        if (root != null && root.getMessage() != null) {
+            message = root.getMessage();
+        }
+        return ResponseErrorDTO.of(HttpStatus.CONFLICT, message, List.of(), path);
     }
 
 }

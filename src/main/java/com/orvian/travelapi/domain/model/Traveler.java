@@ -1,13 +1,18 @@
 package com.orvian.travelapi.domain.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "TB_TRAVELERS")
@@ -43,10 +48,9 @@ public class Traveler {
     private LocalDate birthDate;
 
     // relação com as reservas (comentado caso não esteja totalmente implementado na outra ponta)
-    @JoinColumn(name = "ID_RESERVATION", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Reservation reservation;
-
+    // @JoinColumn(name = "ID_RESERVATION", nullable = false)
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // private Reservation reservation;
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the traveler was created", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt = LocalDateTime.now();
