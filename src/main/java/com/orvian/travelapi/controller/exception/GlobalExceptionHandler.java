@@ -120,4 +120,17 @@ public class GlobalExceptionHandler {
         return ResponseErrorDTO.of(HttpStatus.CONFLICT, message, List.of(), path);
     }
 
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseErrorDTO handleGenericException(Exception e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        // Log detalhado para análise interna
+        return ResponseErrorDTO.of(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred",
+                List.of(),
+                path
+        );
+    }
+
 }

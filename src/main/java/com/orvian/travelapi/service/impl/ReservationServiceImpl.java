@@ -91,9 +91,6 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (DataIntegrityViolationException e) {
             handleErrorSQL(e);
             return null; // This line will not be reached, but is needed to satisfy the compiler
-        } catch (Exception e) {
-            log.error("Unexpected error creating reservation: {}", e.getMessage());
-            throw new RuntimeException("Unexpected error creating payment: " + e.getMessage());
         }
     }
 

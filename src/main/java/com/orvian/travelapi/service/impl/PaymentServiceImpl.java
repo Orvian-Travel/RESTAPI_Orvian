@@ -59,9 +59,6 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (DataIntegrityViolationException e) {
             handleErrorSQL(e);
             return null; // This line will not be reached, but is needed to satisfy the compiler
-        } catch (Exception e) {
-            log.error("Unexpected error creating payment: {}", e.getMessage());
-            throw new RuntimeException("Unexpected error creating payment: " + e.getMessage());
         }
     }
 
