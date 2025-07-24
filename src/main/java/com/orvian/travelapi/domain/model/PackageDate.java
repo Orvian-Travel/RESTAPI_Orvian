@@ -33,7 +33,7 @@ public class PackageDate {
     @Schema(description = "Quantidade disponível para o pacote", example = "20")
     private int qtd_available;
 
-    @JoinColumn(name = "ID_PACKAGES", nullable = false)
+    @JoinColumn(name = "ID_PACKAGE", nullable = false)
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Schema(description = "Referência ao pacote de viagem relacionado")
     private TravelPackage travelPackage;
