@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -40,15 +41,23 @@ public class Reservation {
     @Schema(name = "idUser", description = "User who made the reservation")
     private User user;
 
-    // @ManyToOne
-    // @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)
-    // @Schema(name = "idPackageDate", description = "Travel package date associated with the reservation", example = "123e4567-e89b-12d3-a456-426614174001")
-    // private PackageDate packageDate;
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Traveler> travelers;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "ID_PAYMENT")
+    private Payment payment;
+
+    @ManyToOne
+    @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)
+    @Schema(name = "idPackageDate", description = "Travel package date associated with the reservation", example = "123e4567-e89b-12d3-a456-426614174001")
+    private PackageDate packageDate;
+
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the reservation was created", example = "2023-10-01T12:00:00")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "UPDATE_AT", nullable = false)
+    @Column(name = "UPDATED_AT", nullable = false)
     @Schema(name = "updateAt", description = "Timestamp when the reservation was last updated", example = "2023-10-01T12:00:00")
     private LocalDateTime updateAt = LocalDateTime.now();
 }
