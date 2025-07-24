@@ -1,23 +1,33 @@
 package com.orvian.travelapi.domain.model;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+/*
+    A entidade Usúario representa um usuário do sistema.
+    Usando @Entity para ser reconhecido pelo JPA assim como o @Table para referenciar qual tabela é no banco de dados.
+    Utilizando @Getter e @Setter do Lombok para gerar os métodos de acesso e modificação dos atributos, sem o @Data para ser mais performático.
+    O @Schema é usado para documentar a entidade na API OpenAPI com Swagger.
+    Utilizando @GeneratedValue com a estratégia UUID para gerar automaticamente o ID do usuário.
+    Utilizando LocalDateTime para armazenar as datas de criação e atualização, pois é mais adequado para timestamps.
+ */
 
 @Entity
 @Table(name = "TB_USERS")
 @Getter
 @Setter
-@Schema(
-        description = "User entity representing a user in the system.",
-        title = "User",
-        name = "User"
-)
+@Schema(description = "User entity representing a user in the system.", title = "User", name = "User")
 public class User {
 
     @Id
@@ -51,7 +61,7 @@ public class User {
 
     @Column(name = "ROLE", nullable = false, length = 20)
     @Schema(name = "role", description = "User's role in the system", example = "USER")
-    private String role;
+    private String  role = "USER";
 
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the user was created", example = "2023-10-01T12:00:00")

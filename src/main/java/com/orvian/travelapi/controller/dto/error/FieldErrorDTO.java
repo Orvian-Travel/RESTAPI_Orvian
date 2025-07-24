@@ -1,6 +1,11 @@
-package com.orvian.travelapi.controller.dto;
+package com.orvian.travelapi.controller.dto.error;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+/*
+    DTO para erros de validação de campos.
+    Utilizado para retornar informações sobre erros específicos de campos em requisições.
+ */
 
 @Schema(
         name = "FieldErrorDTO",

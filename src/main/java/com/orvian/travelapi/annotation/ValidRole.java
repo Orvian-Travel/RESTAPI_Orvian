@@ -1,12 +1,12 @@
 package com.orvian.travelapi.annotation;
 
-import com.orvian.travelapi.validator.ValidRoleValidator;
+import com.orvian.travelapi.validator.RoleValidator;
 import jakarta.validation.Constraint;
 
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = ValidRoleValidator.class)
+@Constraint(validatedBy = RoleValidator.class)
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidRole {
