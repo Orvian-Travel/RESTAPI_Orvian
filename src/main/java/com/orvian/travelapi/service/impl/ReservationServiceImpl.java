@@ -47,7 +47,10 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public List<ReservationSearchResultDTO> findAll() {
         return reservationRepository.findAll().stream()
-                .map(reservationMapper::toDTO)
+                .map(reservation -> {
+                    Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+                    return reservationMapper.toDTO(reservation, payment);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -104,9 +107,14 @@ public class ReservationServiceImpl implements ReservationService {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        return reservationRepository.findById(id)
-                .map(reservationMapper::toDTO)
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + id));
+
+        // Busca o pagamento relacionado
+        Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+
+        // Monta o DTO passando o pagamento
+        return reservationMapper.toDTO(reservation, payment);
     }
 
     @Override

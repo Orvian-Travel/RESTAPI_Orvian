@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
@@ -33,4 +34,10 @@ public interface ReservationMapper {
     Traveler toEntity(CreateTravelerDTO dto);
 
     Payment toEntity(CreatePaymentDTO dto);
+
+    @Mapping(target = "id", source = "reservation.id")
+    @Mapping(target = "createdAt", source = "reservation.createdAt")
+    @Mapping(target = "updateAt", source = "reservation.updateAt")
+    @Mapping(target = "payment", source = "payment")
+    ReservationSearchResultDTO toDTO(Reservation reservation, Payment payment);
 }
