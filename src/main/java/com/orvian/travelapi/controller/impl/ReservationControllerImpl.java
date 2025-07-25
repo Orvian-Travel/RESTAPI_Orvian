@@ -45,7 +45,7 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "409", description = "Já existe uma reserva com os mesmos dados"),
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
-    public ResponseEntity<Void> create(@RequestBody @Valid CreateReservationDTO dto) {
+    public ResponseEntity<Void> create(@Valid @RequestBody CreateReservationDTO dto) {
         Reservation reservation = reservationService.create(dto);
         URI location = generateHeaderLocation(reservation.getId());
         return ResponseEntity.created(location).build();

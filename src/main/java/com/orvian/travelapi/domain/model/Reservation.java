@@ -19,7 +19,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -57,10 +56,6 @@ public class Reservation {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "ID_RESERVATION")
     private List<Traveler> travelers;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "ID_PAYMENT")
-    private Payment payment;
 
     @ManyToOne
     @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)

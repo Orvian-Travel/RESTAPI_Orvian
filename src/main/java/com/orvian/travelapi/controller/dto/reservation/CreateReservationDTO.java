@@ -8,11 +8,14 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.traveler.CreateTravelerDTO;
 import com.orvian.travelapi.domain.enums.ReservationSituation;
 
+import jakarta.validation.Valid;
+
 public record CreateReservationDTO(
         ReservationSituation situation,
         LocalDate reservationDate,
         UUID userId,
         List<CreateTravelerDTO> travelers,
+        @Valid
         CreatePaymentDTO payment,
         UUID packageDateId
         ) {
