@@ -17,6 +17,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -32,6 +34,7 @@ public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "ID", columnDefinition = "uniqueidentifier", updatable = false, nullable = false)
     @Schema(name = "id", description = "Payment's unique identifier", example = "123e4567-e89b-12d3-a456-426614174000")
     private UUID id;
 
@@ -66,6 +69,10 @@ public class Payment {
     @Column(name = "INSTALLMENT_AMOUNT", precision = 10, scale = 2)
     @Schema(name = "installmentAmount", description = "Amount for each installment", example = "50.00")
     private BigDecimal installmentAmount;
+
+    @OneToOne
+    @JoinColumn(name = "ID_RESERVATION")
+    private Reservation reservation;
 
     @Column(name = "CREATED_AT", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)

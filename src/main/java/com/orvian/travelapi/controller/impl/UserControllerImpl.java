@@ -56,11 +56,15 @@ public class UserControllerImpl implements GenericController {
         @ApiResponse(responseCode = "409", description = "Usuário com as mesmas credenciais ja existente", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<Void> createUser(@RequestBody @Valid CreateUserDTO dto) {
+    public ResponseEntity<UserSearchResultDTO> createUser(@RequestBody @Valid CreateUserDTO dto) {
         log.info("Creating user with email: {}", dto.email());
         User user = userService.create(dto);
-        URI location = generateHeaderLocation(user.getId()); // Gera a URI do novo usuário
-        return ResponseEntity.created(location).build(); // Retorna o status 201 (Created) com a URI no cabeçalho Location
+        URI location = generateHeaderLocation(user.getId());
+        log.info("User created with ID: {}", user.getId());// Gera a URI do novo usuário
+
+        UserSearchResultDTO createdUserDTO = userService.findById(user.getId());
+
+        return ResponseEntity.created(location).body(createdUserDTO); // Retorna o status 201 (Created) com a URI no cabeçalho Location
     }
 
     /*

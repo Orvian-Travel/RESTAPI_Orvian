@@ -1,94 +1,120 @@
 package com.orvian.travelapi.service.impl;
 
-import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
-import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
-import com.orvian.travelapi.domain.enums.ReservationSituation;
-import com.orvian.travelapi.domain.model.*;
-import com.orvian.travelapi.domain.repository.PackageDateRepository;
-import com.orvian.travelapi.domain.repository.ReservationRepository;
-import com.orvian.travelapi.domain.repository.UserRepository;
-import com.orvian.travelapi.mapper.ReservationMapper;
-import com.orvian.travelapi.service.ReservationService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
+import static java.util.Optional.ofNullable;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Service;
+
+import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
+import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
+import com.orvian.travelapi.domain.model.PackageDate;
+import com.orvian.travelapi.domain.model.Payment;
+import com.orvian.travelapi.domain.model.Reservation;
+import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.domain.repository.PackageDateRepository;
+import com.orvian.travelapi.domain.repository.PaymentRepository;
+import com.orvian.travelapi.domain.repository.ReservationRepository;
+import com.orvian.travelapi.domain.repository.UserRepository;
+import com.orvian.travelapi.mapper.PaymentMapper;
+import com.orvian.travelapi.mapper.ReservationMapper;
+import com.orvian.travelapi.service.ReservationService;
+import com.orvian.travelapi.service.exception.BusinessException;
+import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
+
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @RequiredArgsConstructor
+@Slf4j
+@Transactional
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final PackageDateRepository packageDateRepository;
     private final ReservationMapper reservationMapper;
+    private final PaymentRepository paymentRepository;
+    private final PaymentMapper paymentMapper;
 
     @Override
     public List<ReservationSearchResultDTO> findAll() {
         return reservationRepository.findAll().stream()
-                .map(reservationMapper::toDTO)
+                .map(reservation -> {
+                    Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+                    return reservationMapper.toDTO(reservation, payment);
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     public Reservation create(Record dto) {
-        return null;
-    }
 
-    public Reservation create(CreateReservationDTO dto) {
-        User user = userRepository.findById(dto.userId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + dto.userId()));
-        PackageDate packageDate = packageDateRepository.findById(dto.packageDateId())
-                .orElseThrow(() -> new IllegalArgumentException("Package date not found with ID: " + dto.packageDateId()));
-        boolean exists = reservationRepository.existsByUserIdAndPackageDateId(dto.userId(), dto.packageDateId());
-        if (exists) {
-            throw new IllegalArgumentException("A reservation already exists for this user and package date");
+        try {
+
+            CreateReservationDTO dtoReservation = (CreateReservationDTO) dto;
+
+            User user = userRepository.findById(dtoReservation.userId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + dtoReservation.userId()));
+            PackageDate packageDate = packageDateRepository.findById(dtoReservation.packageDateId())
+                    .orElseThrow(() -> new IllegalArgumentException("Package date not found with ID: " + dtoReservation.packageDateId()));
+
+            if (reservationRepository.existsByUserIdAndPackageDateId(dtoReservation.userId(), dtoReservation.packageDateId())) {
+                throw new DuplicatedRegistryException("A reservation already exists for this user and package date");
+            }
+
+            Reservation reservation = reservationMapper.toEntity((CreateReservationDTO) dto);
+            log.info("Creating reservation with ID: {}", reservation);
+
+            reservation.setUser(user);
+            reservation.setPackageDate(packageDate);
+            reservation.setTravelers(ofNullable(dtoReservation.travelers())
+                    .orElse(List.of())
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(reservationMapper::toEntity)
+                    .collect(Collectors.toList()));
+
+            Reservation savedReservation = reservationRepository.save(reservation);
+
+            if (dtoReservation.payment() != null) {
+                Payment payment = paymentMapper.toEntity(dtoReservation.payment());
+                payment.setReservation(reservation); // associa a reserva ao pagamento
+                paymentRepository.save(payment);
+                paymentRepository.flush();
+            }
+
+            return savedReservation;
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid argument provided for reservation creation: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid argument provided for reservation creation: " + e.getMessage());
+        } catch (RuntimeException e) {
+            handlePersistenceError(e);
+            return null;
         }
 
-        List<Traveler> travelers = dto.travelers().stream()
-                .map(travelerDTO -> {
-                    Traveler traveler = new Traveler();
-                    traveler.setName(travelerDTO.name());
-                    traveler.setEmail(travelerDTO.email());
-                    traveler.setCpf(travelerDTO.cpf());
-                    traveler.setBirthDate(travelerDTO.birthDate());
-                    traveler.setReservation(null);
-                    return traveler;
-                }).collect(Collectors.toList());
-
-        Payment payment = new Payment();
-        payment.setValuePaid(dto.payment().valuePaid());
-        payment.setPaymentMethod(dto.payment().paymentMethod());
-        payment.setStatus(dto.payment().status());
-        payment.setTax(dto.payment().tax());
-        payment.setInstallment(dto.payment().installment());
-        payment.setInstallmentAmount(dto.payment().installmentAmount());
-
-        Reservation reservation = new Reservation();
-        reservation.setReservationDate(dto.reservationDate());
-        reservation.setUser(user);
-        reservation.setPackageDate(packageDate);
-        reservation.setSituation(ReservationSituation.confirmada);
-        reservation.setTravelers(travelers);
-        reservation.setPayment(payment);
-
-        travelers.forEach(t -> t.setReservation(reservation));
-
-        return reservationRepository.save(reservation);
     }
 
     @Override
     public ReservationSearchResultDTO findById(UUID id) {
-        if(id == null) {
+        if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        return reservationRepository.findById(id)
-                .map(reservationMapper::toDTO)
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + id));
+
+        // Busca o pagamento relacionado
+        Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+
+        // Monta o DTO passando o pagamento
+        return reservationMapper.toDTO(reservation, payment);
     }
 
     @Override
@@ -99,7 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
     public void updateCancel(UUID id) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + id));
-        if(reservation.getReservationDate().minusDays(1).isBefore(LocalDate.now())){
+        if (reservation.getReservationDate().minusDays(1).isBefore(LocalDate.now())) {
             throw new IllegalArgumentException("Cannot update reservation less than 1 day before the reservation date");
         }
 
@@ -111,7 +137,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void delete(UUID id) {
-        if(id == null) {
+        if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
         reservationRepository.findById(id)
@@ -120,5 +146,15 @@ public class ReservationServiceImpl implements ReservationService {
                     return reservation;
                 })
                 .orElseThrow(() -> new IllegalArgumentException("Reservation not found with ID: " + id));
+    }
+
+    private void handlePersistenceError(Throwable e) {
+        Throwable rootCause = e;
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        String message = (rootCause.getMessage() != null) ? rootCause.getMessage() : e.getMessage();
+        log.error("Persistence error: {}", message);
+        throw new BusinessException("Falha ao processar reserva: " + message);
     }
 }
