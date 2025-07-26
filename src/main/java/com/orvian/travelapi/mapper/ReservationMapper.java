@@ -12,6 +12,7 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
+import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
 import com.orvian.travelapi.controller.dto.traveler.CreateTravelerDTO;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
@@ -25,7 +26,7 @@ public interface ReservationMapper {
     Reservation toEntity(CreateReservationDTO createReservationDTO);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromDTO(CreateReservationDTO dto, @MappingTarget Reservation reservation);
+    void updateEntityFromDTO(UpdateReservationDTO dto, @MappingTarget Reservation reservation);
 
     ReservationSearchResultDTO toDTO(Reservation reservation);
 

@@ -1,5 +1,15 @@
 package com.orvian.travelapi.service.impl;
 
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.stereotype.Service;
+
 import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
@@ -9,23 +19,15 @@ import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
+import static com.orvian.travelapi.specs.UserSpecs.nameLike;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static com.orvian.travelapi.specs.UserSpecs.nameLike;
 
 /*
        O UserServiceImpl é a implementação da interface UserService.
        @Slf4j é usado para logging, e RequiredArgsConstructor para injeção de dependências.
  */
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -39,10 +41,12 @@ public class UserServiceImpl implements UserService {
        converte cada usuário em um UserSearchResultDTO e retorna a lista.
      */
     @Override
-    public List<UserSearchResultDTO> findAll() {
-        log.info("Retrieving all users");
-        List<User> userList = userRepository.findAll();
-        return userMapper.toUserSearchResultDTOList(userList);
+    public Page<UserSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String name) {
+        Specification<User> spec = (name != null && !name.isBlank()) ? nameLike(name) : null;
+
+        Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<User> userEntitiesPage = userRepository.findAll(spec, pageRequest);
+        return userEntitiesPage.map(userMapper::toDTO);
     }
 
     /*
@@ -59,9 +63,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     O método getUserById() busca um usuário pelo ID.
-     Se o usuário for encontrado, retorna um Optional contendo o usuário.
-     Caso contrário, retorna um Optional vazio.
+     * O método getUserById() busca um usuário pelo ID. Se o usuário for
+     * encontrado, retorna um Optional contendo o usuário. Caso contrário,
+     * retorna um Optional vazio.
      */
     @Override
     public UserSearchResultDTO findById(UUID id) {
@@ -108,18 +112,6 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteById(id);
         log.info("User with ID: {} deleted successfully", id);
-    }
-
-    public Page<UserSearchResultDTO> userPage(Integer pageNumber, Integer pageSize, String name) {
-        Specification<User> spec = null;
-
-        if (name != null && !name.isBlank()) {
-            spec = Specification.where(nameLike(name));
-        }
-
-        Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
-        Page<User> userEntitiesPage = userRepository.findAll(spec, pageRequest);
-        return userEntitiesPage.map(userMapper::toDTO);
     }
 
     /*

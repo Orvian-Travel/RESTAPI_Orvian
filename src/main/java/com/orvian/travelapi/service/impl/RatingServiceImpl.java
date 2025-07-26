@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RatingServiceImpl {
 
-
+    // TODO - Arrumar Ratings
     private final RatingRepository ratingRepository;
     private final UserRepository userRepository;
 

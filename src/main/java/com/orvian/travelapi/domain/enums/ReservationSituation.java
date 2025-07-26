@@ -2,6 +2,10 @@ package com.orvian.travelapi.domain.enums;
 
 public enum ReservationSituation {
     PENDENTE,
-    confirmada,
-    cancelada
+    CONFIRMADA,
+    CANCELADA;
+
+    public static ReservationSituation fromString(String value) {
+        return ReservationSituation.valueOf(value.trim().toUpperCase());
+    }
 }

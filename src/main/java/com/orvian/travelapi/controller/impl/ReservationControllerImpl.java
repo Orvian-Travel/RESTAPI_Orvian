@@ -15,12 +15,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orvian.travelapi.controller.GenericController;
+import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.domain.model.Reservation;
 import com.orvian.travelapi.service.impl.ReservationServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -88,16 +91,17 @@ public class ReservationControllerImpl implements GenericController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/cancel/{id}")
-    @Operation(summary = "Cancelar reserva por ID", description = "Atualiza o status de uma reserva para cancelada pelo seu ID.")
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar reserva por ID", description = "Atualiza o status de uma reserva para cancelada pelo seu ID.")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Reserva cancelada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Reserva não encontrada"),
-        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+        @ApiResponse(responseCode = "204", description = "Reserva atualizada com sucesso"),
+        @ApiResponse(responseCode = "400", description = "Dados de entrada inválidos", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+        @ApiResponse(responseCode = "404", description = "Reserva não encontrada", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class))),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<Void> updateCancel(@PathVariable UUID id) {
+    public ResponseEntity<Void> updateCancel(@PathVariable UUID id, @RequestBody @Valid CreateReservationDTO dto) {
         log.info("Updating reservation with ID: {}", id);
-        reservationService.updateCancel(id);
+        reservationService.update(id, dto);
         return ResponseEntity.ok().build();
     }
 }
