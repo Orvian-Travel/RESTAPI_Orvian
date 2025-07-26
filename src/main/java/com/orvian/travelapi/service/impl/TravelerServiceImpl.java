@@ -38,7 +38,7 @@ public class TravelerServiceImpl implements TravelerService {
     private final TravelerMapper travelerMapper;
 
     @Override
-    @Transactional(readOnly = true) // sobreesceve informando que é apenas para leitura
+    @Transactional(readOnly = true)
     public List<TravelerSearchResultDTO> findAll() {
         log.info("retrieving all travelers");
         List<Traveler> travelerList = travelerRepository.findAll();
@@ -55,7 +55,7 @@ public class TravelerServiceImpl implements TravelerService {
     }
 
     @Override
-    @Transactional(readOnly = true) // sobreesceve informando que é apenas para leitura
+    @Transactional(readOnly = true)
     public TravelerSearchResultDTO findById(UUID id) {
         Traveler traveler = travelerRepository.findById(id).orElseThrow(() -> new NotFoundException("Traveler with ID " + id + " not found"));
         log.info("retrieving traveler with id {}", id);

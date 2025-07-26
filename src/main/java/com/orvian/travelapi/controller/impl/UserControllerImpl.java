@@ -36,12 +36,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/*
-    Controller padrão para gerenciar usuários no sistema.
-    Este controller permite criar, atualizar, buscar e deletar usuários.
-    @Sl4j é usado para registrar logs de atividades.
-    @Tag é usado para categorizar as operações na documentação OpenAPI com swagger.
- */
 @RestController
 @RequestMapping("/api/v1/users")
 @Slf4j
@@ -53,16 +47,6 @@ public class UserControllerImpl implements GenericController {
 
     private final PagedResourcesAssembler<UserSearchResultDTO> pagedResourcesAssembler;
 
-    /*
-        Cria um novo usuário com as credenciais fornecidas.
-        @PostMapping é usado para mapear requisições HTTP POST para este método.
-        @Operation e @ApiResponses são usados para documentar a operação na API.
-        @Valid é usado para validar o DTO de entrada.
-        Retorna um ResponseEntity com o status 201 (Created) e a URI do novo usuário no cabeçalho Location.
-        Erro 400 (Bad Request) é retornado se os dados de entrada forem inválidos.
-        Erro 409 (Conflict) é retornado se já existir um usuário com as mesmas credenciais.
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
     @PostMapping
     @Operation(summary = "Criar um novo Usuário", description = "Cria um novo usuário com as credenciais oferecidas.")
     @ApiResponses({
@@ -75,20 +59,13 @@ public class UserControllerImpl implements GenericController {
         log.info("Creating user with email: {}", dto.email());
         User user = userService.create(dto);
         URI location = generateHeaderLocation(user.getId());
-        log.info("User created with ID: {}", user.getId());// Gera a URI do novo usuário
+        log.info("User created with ID: {}", user.getId());
 
         UserSearchResultDTO createdUserDTO = userService.findById(user.getId());
 
-        return ResponseEntity.created(location).body(createdUserDTO); // Retorna o status 201 (Created) com a URI no cabeçalho Location
+        return ResponseEntity.created(location).body(createdUserDTO);
     }
 
-    /*
-        Busca todos os usuários registrados no sistema.
-        @GetMapping é usado para mapear requisições HTTP GET para este método.
-        @Operation e @ApiResponses são usados para documentar a operação na API.
-        Retorna um ResponseEntity com uma lista de UserSearchResultDTO e o status 200 (OK).
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
     @GetMapping
     @Operation(summary = "Paginação da lista de todos os usuários", description = "Recupera uma página contendo uma lista de usuários.")
     @ApiResponses({
@@ -106,15 +83,6 @@ public class UserControllerImpl implements GenericController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    /*
-        Busca um usuário específico pelo ID.
-        @GetMapping("/{id}") é usado para mapear requisições HTTP GET para este método, onde {id} é o ID do usuário.
-        @PathVariable é usado para extrair o ID do usuário da URL.
-        @Operation e @ApiResponses são usados para documentar a operação na API.
-        Retorna um ResponseEntity com o UserSearchResultDTO e o status 200 (OK) se o usuário for encontrado.
-        Erro 404 (Not Found) é retornado se o usuário não for encontrado.
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
     @GetMapping("/{id}")
     @Operation(summary = "Buscar um usuário pelo ID", description = "Recupera um usuário identificando pelo ID.")
     @ApiResponses({
@@ -126,17 +94,6 @@ public class UserControllerImpl implements GenericController {
         return ResponseEntity.ok(userService.findById(id));
     }
 
-    /*
-        Atualiza um usuário existente com as credenciais fornecidas.
-        @PutMapping é usado para mapear requisições HTTP PUT para este método.
-        @PathVariable é usado para extrair o ID do usuário da URL.
-        @Valid é usado para validar o DTO de entrada.
-        Retorna um ResponseEntity com o status 204 (No Content) se a atualização for bem-sucedida.
-        Erro 400 (Bad Request) é retornado se os dados de entrada forem inválidos.
-        Erro 404 (Not Found) é retornado se o usuário não for encontrado.
-        Erro 409 (Conflict) é retornado se já existir um usuário com as mesmas credenciais.
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza um usuário existente", description = "Atualiza as credenciais de um usuário existente, identificando pelo ID.")
     @ApiResponses({
@@ -149,18 +106,9 @@ public class UserControllerImpl implements GenericController {
     public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
         log.info("Updating user with id: {}", id);
         userService.update(id, dto);
-        return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a atualização for bem-sucedida
+        return ResponseEntity.noContent().build();
     }
 
-    /*
-        Deleta um usuário identificado pelo ID.
-        @DeleteMapping("/{id}") é usado para mapear requisições HTTP DELETE para este método, onde {id} é o ID do usuário.
-        @PathVariable é usado para extrair o ID do usuário da URL.
-        @Operation e @ApiResponses são usados para documentar a operação na API.
-        Retorna um ResponseEntity com o status 204 (No Content) se a exclusão for bem-sucedida.
-        Erro 404 (Not Found) é retornado se o usuário não for encontrado.
-        Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
-     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Excluir um usuário", description = "Exclui um usuário identificando pelo ID.")
     @ApiResponses({
@@ -171,6 +119,6 @@ public class UserControllerImpl implements GenericController {
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         log.info("Deleting user with id: {}", id);
         userService.delete(id);
-        return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a exclusão for bem-sucedida
+        return ResponseEntity.noContent().build();
     }
 }

@@ -14,15 +14,6 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-/*
-    A entidade Usúario representa um usuário do sistema.
-    Usando @Entity para ser reconhecido pelo JPA assim como o @Table para referenciar qual tabela é no banco de dados.
-    Utilizando @Getter e @Setter do Lombok para gerar os métodos de acesso e modificação dos atributos, sem o @Data para ser mais performático.
-    O @Schema é usado para documentar a entidade na API OpenAPI com Swagger.
-    Utilizando @GeneratedValue com a estratégia UUID para gerar automaticamente o ID do usuário.
-    Utilizando LocalDateTime para armazenar as datas de criação e atualização, pois é mais adequado para timestamps.
- */
-
 @Entity
 @Table(name = "TB_USERS")
 @Getter
