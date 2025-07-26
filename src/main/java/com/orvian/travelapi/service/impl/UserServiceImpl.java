@@ -11,6 +11,10 @@ import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -104,6 +108,12 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteById(id);
         log.info("User with ID: {} deleted successfully", id);
+    }
+
+    public Page<UserSearchResultDTO> userPage(Integer pageNumber, Integer pageSize) {
+        Pageable pageRequest = PageRequest.of(pageNumber, pageSize);
+        Page<User> userEntitiesPage = userRepository.findAll(pageRequest);
+        return userEntitiesPage.map(userMapper::toDTO);
     }
 
     /*
