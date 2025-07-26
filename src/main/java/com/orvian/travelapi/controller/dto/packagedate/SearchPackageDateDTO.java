@@ -7,6 +7,8 @@ public record SearchPackageDateDTO(
         UUID id,
         LocalDate startDate,
         LocalDate endDate,
-        int qtd_available
-) {
+        int qtd_available,
+        UUID travelPackageId
+        ) {
+
 }

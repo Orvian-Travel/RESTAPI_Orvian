@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
@@ -14,8 +13,8 @@ import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.mapper.PaymentMapper;
 import com.orvian.travelapi.service.PaymentService;
-import com.orvian.travelapi.service.exception.BusinessException;
 import com.orvian.travelapi.service.exception.NotFoundException;
+import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -56,8 +55,8 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (IllegalArgumentException e) {
             log.error("Invalid argument provided for payment update: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
-        } catch (DataIntegrityViolationException e) {
-            handleErrorSQL(e);
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
             return null; // This line will not be reached, but is needed to satisfy the compiler
         }
     }
@@ -90,12 +89,8 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Invalid argument provided for payment update: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
 
-        } catch (DataIntegrityViolationException e) {
-            handleErrorSQL(e);
-
-        } catch (Exception e) {
-            log.error("Unexpected error updating payment: {}", e.getMessage());
-            throw new RuntimeException("Unexpected error updating payment: " + e.getMessage());
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
         }
     }
 
@@ -112,15 +107,6 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("Deleting payment with ID: {}", id);
         paymentRepository.delete(payment);
         log.info("Payment deleted with ID: {}", id);
-    }
-
-    private void handleErrorSQL(DataIntegrityViolationException e) {
-        Throwable rootCause = e.getRootCause();
-        String message = (rootCause != null && rootCause.getMessage() != null)
-                ? rootCause.getMessage()
-                : e.getMessage();
-        log.error("Database integrity error: {}", message);
-        throw new BusinessException("Falha ao criar pagamento: " + message);
     }
 
 }

@@ -5,4 +5,5 @@ import java.util.UUID;
 import com.orvian.travelapi.domain.model.User;
 
 public interface UserService extends CrudService<UUID, User> {
+
 }

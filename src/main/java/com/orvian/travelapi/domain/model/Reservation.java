@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.UUID;
 
 import com.orvian.travelapi.domain.enums.ReservationSituation;
+import com.orvian.travelapi.domain.enums.converter.ReservationSituationConverter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -40,7 +40,7 @@ public class Reservation {
     private LocalDate reservationDate;
 
     @Column(name = "SITUATION", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ReservationSituationConverter.class)
     @Schema(name = "situation", description = "Current situation of the reservation", example = "CONFIRMED")
     private ReservationSituation situation;
 

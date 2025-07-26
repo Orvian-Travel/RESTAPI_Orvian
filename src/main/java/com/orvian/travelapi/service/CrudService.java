@@ -4,26 +4,20 @@ import java.util.UUID;
 
 public interface CrudService<ID, T> {
 
-    // default Object findAll() {
-    //     return findAll();
-    // }
-    // default Object findAll(Integer pageNumber, Integer pageSize) {
-    //     return findAll(pageNumber, pageSize);
-    // }
-    // default Object findAll(Integer pageNumber, Integer pageSize, String sortBy) {
-    //     return findAll(pageNumber, pageSize, sortBy);
-    // }
     default Object findAll() {
-        return findAll(null, null, null);
+        throw new UnsupportedOperationException("findAll() not implemented yet.");
     }
 
     default Object findAll(Integer pageNumber, Integer pageSize) {
-        return findAll(pageNumber, pageSize, null);
+        throw new UnsupportedOperationException("findAll(pageNumber, pageSize) not implemented yet.");
     }
 
     default Object findAll(Integer pageNumber, Integer pageSize, String sortBy) {
-        // Implementação padrão, pode lançar exceção ou retornar null/lista vazia
-        return null;
+        throw new UnsupportedOperationException("findAll(pageNumber, pageSize, String sortBy) not implemented yet.");
+    }
+
+    default Object findAll(Integer pageNumber, Integer pageSize, UUID sortBy) {
+        throw new UnsupportedOperationException("findAll(pageNumber, pageSize, UUID sortBy) not implemented yet.");
     }
 
     T create(Record dto);

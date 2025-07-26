@@ -19,6 +19,7 @@ import com.orvian.travelapi.mapper.UserMapper;
 import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
+import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
 import static com.orvian.travelapi.specs.UserSpecs.nameLike;
 
 import lombok.RequiredArgsConstructor;
@@ -34,19 +35,32 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Page<UserSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String name) {
-        Specification<User> spec = (name != null && !name.isBlank()) ? nameLike(name) : null;
+        try {
+            Specification<User> spec = (name != null && !name.isBlank()) ? nameLike(name) : null;
 
-        Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
-        Page<User> userEntitiesPage = userRepository.findAll(spec, pageRequest);
-        return userEntitiesPage.map(userMapper::toDTO);
+            Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+            Page<User> userEntitiesPage = userRepository.findAll(spec, pageRequest);
+            return userEntitiesPage.map(userMapper::toDTO);
+        } catch (Exception e) {
+            log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+        }
     }
 
     @Override
     public User create(Record dto) {
-        User user = userMapper.toEntity((CreateUserDTO) dto);
-        log.info("Creating user with email: {}", user.getEmail());
-        validateCreationAndUpdate(user);
-        return userRepository.save(user);
+        try {
+            User user = userMapper.toEntity((CreateUserDTO) dto);
+            log.info("Creating user with email: {}", user.getEmail());
+            validateCreationAndUpdate(user);
+            return userRepository.save(user);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid argument provided for reservation creation: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid argument provided for reservation creation: " + e.getMessage());
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
+            return null;
+        }
     }
 
     @Override
@@ -64,14 +78,24 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException("User with id " + id + " not found.");
         }
 
-        User user = userOptional.get();
-        log.info("Updating user with ID: {}", user.getId());
-        validateCreationAndUpdate(user);
+        try {
 
-        userMapper.updateEntityFromDto((UpdateUserDTO) dto, user);
+            User user = userOptional.get();
+            log.info("Updating user with ID: {}", user.getId());
+            validateCreationAndUpdate(user);
 
-        User updatedUser = userRepository.save(user);
-        log.info("User updated with ID: {}", updatedUser.getId());
+            userMapper.updateEntityFromDto((UpdateUserDTO) dto, user);
+
+            User updatedUser = userRepository.save(user);
+            log.info("User updated with ID: {}", updatedUser.getId());
+
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid argument provided for payment update: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
+
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
+        }
     }
 
     @Override

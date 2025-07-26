@@ -1,10 +1,14 @@
 package com.orvian.travelapi.domain.repository;
 
-import com.orvian.travelapi.domain.model.PackageDate;
-import org.springframework.data.jpa.repository.JpaRepository;
-
+import java.util.List;
 import java.util.UUID;
 
-public interface PackageDateRepository extends JpaRepository <PackageDate, UUID> {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.orvian.travelapi.domain.model.PackageDate;
+
+public interface PackageDateRepository extends JpaRepository<PackageDate, UUID> {
+
+    List<PackageDate> findByTravelPackage_Id(UUID travelPackageId);
 
 }

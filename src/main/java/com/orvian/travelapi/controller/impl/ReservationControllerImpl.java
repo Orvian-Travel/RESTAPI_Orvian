@@ -1,9 +1,12 @@
 package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orvian.travelapi.controller.GenericController;
@@ -40,6 +44,8 @@ public class ReservationControllerImpl implements GenericController {
 
     private final ReservationServiceImpl reservationService;
 
+    private final PagedResourcesAssembler<ReservationSearchResultDTO> pagedResourcesAssembler;
+
     @PostMapping
     @Operation(summary = "Criar uma nova reserva", description = "Cria uma nova reserva com os detalhes fornecidos.")
     @ApiResponses({
@@ -60,10 +66,15 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "200", description = "Reservas recuperadas com sucesso"),
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
-    public ResponseEntity<List<ReservationSearchResultDTO>> findAll() {
-        log.info("Fetching all reservations");
-        List<ReservationSearchResultDTO> reservations = reservationService.findAll();
-        return ResponseEntity.ok(reservations);
+    public ResponseEntity<PagedModel<EntityModel<ReservationSearchResultDTO>>> getReservationsByPage(
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) UUID userId) {
+
+        Page<ReservationSearchResultDTO> page = reservationService.findAll(pageNumber, pageSize, userId);
+        PagedModel<EntityModel<ReservationSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
+
+        return ResponseEntity.ok(pagedModel);
     }
 
     @GetMapping("/{id}")

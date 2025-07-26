@@ -8,12 +8,14 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.orvian.travelapi.controller.dto.packagedate.SearchPackageDateDTO;
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
 import com.orvian.travelapi.controller.dto.traveler.CreateTravelerDTO;
+import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
 import com.orvian.travelapi.domain.model.Traveler;
@@ -40,5 +42,9 @@ public interface ReservationMapper {
     @Mapping(target = "createdAt", source = "reservation.createdAt")
     @Mapping(target = "updateAt", source = "reservation.updateAt")
     @Mapping(target = "payment", source = "payment")
+    @Mapping(target = "packageDate", source = "reservation.packageDate")
     ReservationSearchResultDTO toDTO(Reservation reservation, Payment payment);
+
+    @Mapping(target = "travelPackageId", source = "travelPackage.id")
+    SearchPackageDateDTO toDTO(PackageDate packageDate);
 }

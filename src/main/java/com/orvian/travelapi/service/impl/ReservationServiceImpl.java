@@ -7,6 +7,11 @@ import static java.util.Optional.ofNullable;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
@@ -26,6 +31,7 @@ import com.orvian.travelapi.service.ReservationService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
+import com.orvian.travelapi.specs.ReservationSpecs;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -45,13 +51,25 @@ public class ReservationServiceImpl implements ReservationService {
     private final PaymentMapper paymentMapper;
 
     @Override
-    public List<ReservationSearchResultDTO> findAll() {
-        return reservationRepository.findAll().stream()
-                .map(reservation -> {
-                    Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
-                    return reservationMapper.toDTO(reservation, payment);
-                })
-                .collect(Collectors.toList());
+    public Page<ReservationSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, UUID userID) {
+        try {
+
+            log.info("Retrieving all reservations for user ID: {}", userID);
+            Specification<Reservation> spec = (userID != null) ? ReservationSpecs.userIdEquals(userID) : null;
+
+            Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+
+            return reservationRepository
+                    .findAll(spec, pageRequest)
+                    .map(reservation -> {
+                        Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+                        return reservationMapper.toDTO(reservation, payment);
+                    });
+
+        } catch (Exception e) {
+            log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+        }
     }
 
     @Override
@@ -110,11 +128,8 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + id));
 
-        // Busca o pagamento relacionado
-        Payment payment = paymentRepository.findByReservation_Id(reservation.getId())
-                .orElseThrow(() -> new NotFoundException("Payment not found for reservation with ID: " + id));
+        Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
 
-        // Monta o DTO passando o pagamento
         return reservationMapper.toDTO(reservation, payment);
     }
 
@@ -125,13 +140,20 @@ public class ReservationServiceImpl implements ReservationService {
             log.error("Reservation with id {} not found", id);
             throw new NotFoundException("Reservation with id " + id + " not found.");
         }
+        try {
+            Reservation reservation = reservationOptional.get();
+            log.info("Updating reservation with ID: {}", reservation.getId());
 
-        Reservation reservation = reservationOptional.get();
-        log.info("Updating reservation with ID: {}", reservation.getId());
+            reservationMapper.updateEntityFromDTO((UpdateReservationDTO) dto, reservation);
+            Reservation updatedReservation = reservationRepository.save(reservation);
+            log.info("Reservation updated with ID: {}", updatedReservation.getId());
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid argument provided for payment update: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
 
-        reservationMapper.updateEntityFromDTO((UpdateReservationDTO) dto, reservation);
-        Reservation updatedReservation = reservationRepository.save(reservation);
-        log.info("Reservation updated with ID: {}", updatedReservation.getId());
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
+        }
     }
 
     @Override
