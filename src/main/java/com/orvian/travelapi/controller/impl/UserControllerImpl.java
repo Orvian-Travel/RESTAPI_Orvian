@@ -4,6 +4,9 @@ import java.net.URI;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orvian.travelapi.controller.GenericController;
-import com.orvian.travelapi.controller.dto.PageResponseDTO;
 import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
 import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
@@ -48,6 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 public class UserControllerImpl implements GenericController {
 
     private final UserServiceImpl userService;
+
+    private final PagedResourcesAssembler<UserSearchResultDTO> pagedResourcesAssembler;
 
     /*
         Cria um novo usuário com as credenciais fornecidas.
@@ -91,23 +95,15 @@ public class UserControllerImpl implements GenericController {
         @ApiResponse(responseCode = "200", description = "Usuários recuperados com sucesso"),
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
-    public ResponseEntity<PageResponseDTO<UserSearchResultDTO>> getUsersByPage(
+    public ResponseEntity<PagedModel<EntityModel<UserSearchResultDTO>>> getUsersByPage(
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String name) {
 
         Page<UserSearchResultDTO> page = userService.findAll(pageNumber, pageSize, name);
+        PagedModel<EntityModel<UserSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
 
-        PageResponseDTO<UserSearchResultDTO> response = new PageResponseDTO<>(
-                page.getContent(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages(),
-                page.isLast()
-        );
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(pagedModel);
     }
 
     /*
