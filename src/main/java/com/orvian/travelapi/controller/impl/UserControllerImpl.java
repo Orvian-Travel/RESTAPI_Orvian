@@ -75,7 +75,17 @@ public class UserControllerImpl implements GenericController {
         Retorna um ResponseEntity com uma lista de UserSearchResultDTO e o status 200 (OK).
         Erro 500 (Internal Server Error) é retornado em caso de erro no servidor.
      */
-
+    @GetMapping
+    @Operation(summary = "Paginação da lista de todos os usuários", description = "Recupera uma página contendo uma lista de usuários.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuários recuperados com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+    })
+    public ResponseEntity<Page<UserSearchResultDTO>> getUsersByPage(
+            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10")Integer pageSize) {
+        return ResponseEntity.ok(userService.userPage(pageNumber, pageSize));
+    }
 
     /*
         Busca um usuário específico pelo ID.
@@ -95,18 +105,6 @@ public class UserControllerImpl implements GenericController {
     })
     public ResponseEntity<UserSearchResultDTO> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(userService.findById(id));
-    }
-
-    @GetMapping
-    @Operation(summary = "Paginação da lista de todos os usuários", description = "Recupera uma página contendo uma lista de usuários.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Usuários recuperados com sucesso"),
-            @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
-    })
-    public ResponseEntity<Page<UserSearchResultDTO>> getUsersByPage(
-            @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10")Integer pageSize) {
-        return ResponseEntity.ok(userService.userPage(pageNumber, pageSize));
     }
 
     /*
