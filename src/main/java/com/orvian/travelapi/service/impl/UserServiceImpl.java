@@ -11,15 +11,15 @@ import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.orvian.travelapi.specs.UserSpecs.nameLike;
 
 /*
        O UserServiceImpl é a implementação da interface UserService.
@@ -110,9 +110,15 @@ public class UserServiceImpl implements UserService {
         log.info("User with ID: {} deleted successfully", id);
     }
 
-    public Page<UserSearchResultDTO> userPage(Integer pageNumber, Integer pageSize) {
-        Pageable pageRequest = PageRequest.of(pageNumber, pageSize);
-        Page<User> userEntitiesPage = userRepository.findAll(pageRequest);
+    public Page<UserSearchResultDTO> userPage(Integer pageNumber, Integer pageSize, String name) {
+        Specification<User> spec = null;
+
+        if (name != null && !name.isBlank()) {
+            spec = Specification.where(nameLike(name));
+        }
+
+        Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+        Page<User> userEntitiesPage = userRepository.findAll(spec, pageRequest);
         return userEntitiesPage.map(userMapper::toDTO);
     }
 

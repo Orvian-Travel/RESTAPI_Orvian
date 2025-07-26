@@ -83,8 +83,9 @@ public class UserControllerImpl implements GenericController {
     })
     public ResponseEntity<Page<UserSearchResultDTO>> getUsersByPage(
             @RequestParam(value = "pageNumber", defaultValue = "0") Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10")Integer pageSize) {
-        return ResponseEntity.ok(userService.userPage(pageNumber, pageSize));
+            @RequestParam(value = "pageSize", defaultValue = "10")Integer pageSize,
+            @RequestParam(value = "name", required = false) String name){
+        return ResponseEntity.ok(userService.userPage(pageNumber, pageSize, name));
     }
 
     /*
