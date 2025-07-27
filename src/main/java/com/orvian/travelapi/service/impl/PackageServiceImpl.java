@@ -3,8 +3,12 @@ package com.orvian.travelapi.service.impl;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
@@ -19,6 +23,7 @@ import com.orvian.travelapi.service.TravelPackageService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
+import static com.orvian.travelapi.specs.TravelPackageSpecs.titleLike;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,16 +38,24 @@ public class PackageServiceImpl implements TravelPackageService {
     private final PackageDateRepository packageDateRepository;
 
     @Override
-    public List<PackageSearchResultDTO> findAll() {
-        List<TravelPackage> packages = travelPackageRepository.findAll();
-        return packages.stream()
-                .map(pkg -> {
-                    // Busca as datas desse pacote
-                    List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
-                    // Monte o DTO, passando as datas
-                    return travelPackageMapper.toDTO(pkg, dates);
-                })
-                .collect(Collectors.toList());
+    public Page<PackageSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String title) {
+        try {
+            log.info("Retrieving all travel packages with title: {}", title);
+            Specification<TravelPackage> spec = (title != null && !title.isBlank()) ? titleLike(title) : null;
+            Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+
+            return travelPackageRepository
+                    .findAll(spec, pageRequest)
+                    .map(pkg -> {
+
+                        List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
+
+                        return travelPackageMapper.toDTO(pkg, dates);
+                    });
+        } catch (Exception e) {
+            log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+        }
     }
 
     @Override
@@ -62,9 +75,15 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public PackageSearchResultDTO findById(UUID id) {
-        TravelPackage travelPackage = travelPackageRepository.findById(id).orElseThrow(() -> new NotFoundException("Travel package with ID " + id + " not found."));
+        TravelPackage travelPackage = travelPackageRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Travel package with ID " + id + " not found."));
         log.info("Travel package found with ID: {}", id);
-        return travelPackageMapper.toDTO(travelPackage);
+
+        // Busca as datas desse pacote
+        List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(travelPackage.getId());
+
+        // Monte o DTO, passando as datas
+        return travelPackageMapper.toDTO(travelPackage, dates);
     }
 
     @Override

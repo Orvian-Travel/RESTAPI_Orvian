@@ -28,6 +28,7 @@ public interface TravelPackageMapper {
     void updateEntityFromDto(UpdateTravelPackageDTO dto, @MappingTarget TravelPackage travelPackage);
 
     // TravelPackageMapper.java
+    @Mapping(target = "packageDates", source = "packageDates")
     PackageSearchResultDTO toDTO(TravelPackage entity, List<PackageDate> packageDates);
 
     @Mapping(target = "travelPackageId", source = "travelPackage.id")
