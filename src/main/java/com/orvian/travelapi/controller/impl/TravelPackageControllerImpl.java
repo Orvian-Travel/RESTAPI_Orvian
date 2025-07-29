@@ -2,6 +2,7 @@ package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -91,12 +92,13 @@ public class TravelPackageControllerImpl implements GenericController {
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = true) String title,
-            @RequestParam(required = true) LocalDate startDate,
-            @RequestParam(required = true) Integer maxPeople
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(defaultValue = "1") Integer maxPeople
     ) {
-        log.info("Searching packages with title: {}, startDate: {}, maxPeople: {}", title, startDate, maxPeople);
+        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now(ZoneOffset.UTC);
+        log.info("Searching packages with title: {}, startDate: {}, maxPeople: {}", title, effectiveStartDate, maxPeople);
 
-        Page<PackageSearchResultDTO> page = packageService.findAllBySearch(pageNumber, pageSize, title, startDate, maxPeople);
+        Page<PackageSearchResultDTO> page = packageService.findAllBySearch(pageNumber, pageSize, title, effectiveStartDate, maxPeople);
         PagedModel<EntityModel<PackageSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
 
         return ResponseEntity.ok(pagedModel);
