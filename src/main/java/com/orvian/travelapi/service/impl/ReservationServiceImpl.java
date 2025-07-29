@@ -101,6 +101,7 @@ public class ReservationServiceImpl implements ReservationService {
                     .collect(Collectors.toList()));
 
             Reservation savedReservation = reservationRepository.save(reservation);
+            reservationRepository.flush();
 
             if (dtoReservation.payment() != null) {
                 Payment payment = paymentMapper.toEntity(dtoReservation.payment());

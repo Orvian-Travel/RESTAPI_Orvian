@@ -1,5 +1,11 @@
 package com.orvian.travelapi.service.impl;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -63,6 +69,8 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
      * Constrói o conteúdo completo do email com todas as informações da reserva
      */
     private String buildHtmlEmailContent(EmailConfirmationDTO data) {
+
+        String formattedDateTime = formatDateTimeForBrazilian(data.paymentApprovedAt());
         return String.format("""
             <!DOCTYPE html>
             <html lang="pt-BR">
@@ -206,8 +214,36 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                 data.totalTravelers(),
                 data.totalAmountPaid(),
                 data.paymentMethod(),
-                data.paymentApprovedAt(),
+                formattedDateTime,
                 emailProperties.getSupport()
         );
+    }
+
+    private String formatDateTimeForBrazilian(LocalDateTime dateTime) {
+        if (dateTime == null) {
+            return "Data não informada";
+        }
+
+        try {
+
+            ZoneId brasiliaZone = ZoneId.of("America/Sao_Paulo");
+            ZoneId utcZone = ZoneId.of("UTC");
+
+            ZonedDateTime utcDateTime = dateTime.atZone(utcZone);
+            ZonedDateTime brasiliaDateTime = utcDateTime.withZoneSameInstant(brasiliaZone);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
+                    "dd/MM/yyyy 'às' HH:mm",
+                    Locale.forLanguageTag("pt-BR")
+            );
+
+            return brasiliaDateTime.format(formatter);
+
+        } catch (Exception e) {
+            log.warn("Failed to format datetime for Brazilian timezone: {}", e.getMessage());
+
+            DateTimeFormatter fallbackFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            return dateTime.format(fallbackFormatter) + " (UTC)";
+        }
     }
 }

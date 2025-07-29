@@ -90,6 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
             paymentMapper.updateEntityFromDTO((UpdatePaymentDTO) dto, payment);
 
             Payment savedPayment = paymentRepository.save(payment);
+            paymentRepository.flush();
 
             if (shouldSendConfirmationEmail(oldStatus, savedPayment.getStatus())) {
                 sendPaymentConfirmationEmail(savedPayment);
@@ -102,6 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
 
         } catch (RuntimeException e) {
+            log.error("Failed to update payment with ID {}: {}", id, e.getMessage());
             handlePersistenceError(e, log);
         }
     }

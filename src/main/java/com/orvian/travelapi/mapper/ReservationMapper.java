@@ -40,7 +40,7 @@ public interface ReservationMapper {
 
     @Mapping(target = "id", source = "reservation.id")
     @Mapping(target = "createdAt", source = "reservation.createdAt")
-    @Mapping(target = "updateAt", source = "reservation.updateAt")
+    @Mapping(target = "updatedAt", source = "reservation.updatedAt")
     @Mapping(target = "payment", source = "payment")
     @Mapping(target = "packageDate", source = "reservation.packageDate")
     ReservationSearchResultDTO toDTO(Reservation reservation, Payment payment);
