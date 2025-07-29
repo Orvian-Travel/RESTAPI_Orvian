@@ -104,7 +104,7 @@ public class ReservationServiceImpl implements ReservationService {
 
             if (dtoReservation.payment() != null) {
                 Payment payment = paymentMapper.toEntity(dtoReservation.payment());
-                payment.setReservation(reservation); // associa a reserva ao pagamento
+                payment.setReservation(savedReservation); // associa a reserva ao pagamento
                 paymentRepository.save(payment);
                 paymentRepository.flush();
             }

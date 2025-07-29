@@ -1,5 +1,6 @@
 package com.orvian.travelapi.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,6 +24,8 @@ import com.orvian.travelapi.service.TravelPackageService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
+import static com.orvian.travelapi.specs.TravelPackageSpecs.hasStartDateFrom;
+import static com.orvian.travelapi.specs.TravelPackageSpecs.maxPeopleGreaterThanOrEqual;
 import static com.orvian.travelapi.specs.TravelPackageSpecs.titleLike;
 
 import lombok.RequiredArgsConstructor;
@@ -50,11 +53,45 @@ public class PackageServiceImpl implements TravelPackageService {
 
                         List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
 
-                        return travelPackageMapper.toDTO(pkg, dates);
+                        return travelPackageMapper.toDTOWithDates(pkg, dates);
                     });
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<PackageSearchResultDTO> findAllBySearch(Integer pageNumber, Integer pageSize, String title,
+            LocalDate startDate, Integer maxPeople) {
+        try {
+            log.info("Retrieving travel packages with filters - title: {}, startDate: {}, maxPeople: {}",
+                    title, startDate, maxPeople);
+
+            Specification<TravelPackage> spec = (root, query, cb) -> cb.conjunction();
+
+            if (title != null && !title.isBlank()) {
+                spec = spec.and(titleLike(title));
+            }
+            if (startDate != null) {
+                spec = spec.and(hasStartDateFrom(startDate));
+            }
+            if (maxPeople != null) {
+                spec = spec.and(maxPeopleGreaterThanOrEqual(maxPeople));
+            }
+
+            Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+
+            return travelPackageRepository
+                    .findAll(spec, pageRequest)
+                    .map(pkg -> {
+                        List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
+                        return travelPackageMapper.toDTOWithDates(pkg, dates);
+                    });
+
+        } catch (Exception e) {
+            log.error("Erro ao buscar pacotes: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar pacotes: " + e.getMessage());
         }
     }
 
@@ -83,7 +120,7 @@ public class PackageServiceImpl implements TravelPackageService {
         List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(travelPackage.getId());
 
         // Monte o DTO, passando as datas
-        return travelPackageMapper.toDTO(travelPackage, dates);
+        return travelPackageMapper.toDTOWithDates(travelPackage, dates);
     }
 
     @Override

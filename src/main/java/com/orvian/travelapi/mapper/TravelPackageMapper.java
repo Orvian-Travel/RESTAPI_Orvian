@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
+
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
@@ -20,6 +21,7 @@ public interface TravelPackageMapper {
 
     TravelPackage toTravelPackage(CreateTravelPackageDTO dto);
 
+    // Método para conversão simples (sem datas)
     PackageSearchResultDTO toDTO(TravelPackage entity);
 
     List<PackageSearchResultDTO> toPackageSearchResultDTOList(List<TravelPackage> entities);
@@ -27,9 +29,9 @@ public interface TravelPackageMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntityFromDto(UpdateTravelPackageDTO dto, @MappingTarget TravelPackage travelPackage);
 
-    // TravelPackageMapper.java
+    // Método para conversão com datas (nome diferente)
     @Mapping(target = "packageDates", source = "packageDates")
-    PackageSearchResultDTO toDTO(TravelPackage entity, List<PackageDate> packageDates);
+    PackageSearchResultDTO toDTOWithDates(TravelPackage entity, List<PackageDate> packageDates);
 
     @Mapping(target = "travelPackageId", source = "travelPackage.id")
     SearchPackageDateDTO toDTO(PackageDate entity);

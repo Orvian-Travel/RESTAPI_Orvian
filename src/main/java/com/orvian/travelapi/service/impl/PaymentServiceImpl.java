@@ -6,12 +6,16 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.orvian.travelapi.controller.dto.email.EmailConfirmationDTO;
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.payment.UpdatePaymentDTO;
+import com.orvian.travelapi.domain.enums.PaymentStatus;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
+import com.orvian.travelapi.mapper.EmailMapper;
 import com.orvian.travelapi.mapper.PaymentMapper;
+import com.orvian.travelapi.service.EmailNotificationService;
 import com.orvian.travelapi.service.PaymentService;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
@@ -28,6 +32,8 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final EmailNotificationService emailService;
+    private final EmailMapper emailMapper;
 
     @Override
     public List<PaymentSearchResultDTO> findAll() {
@@ -57,7 +63,7 @@ public class PaymentServiceImpl implements PaymentService {
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
         } catch (RuntimeException e) {
             handlePersistenceError(e, log);
-            return null; // This line will not be reached, but is needed to satisfy the compiler
+            return null;
         }
     }
 
@@ -79,10 +85,16 @@ public class PaymentServiceImpl implements PaymentService {
 
         try {
             Payment payment = paymentOptional.get();
+            PaymentStatus oldStatus = payment.getStatus();
             log.info("Updating payment with ID: {}", id);
             paymentMapper.updateEntityFromDTO((UpdatePaymentDTO) dto, payment);
 
-            paymentRepository.save(payment);
+            Payment savedPayment = paymentRepository.save(payment);
+
+            if (shouldSendConfirmationEmail(oldStatus, savedPayment.getStatus())) {
+                sendPaymentConfirmationEmail(savedPayment);
+            }
+
             log.info("Payment updated with ID: {}", payment.getId());
 
         } catch (IllegalArgumentException e) {
@@ -107,6 +119,25 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("Deleting payment with ID: {}", id);
         paymentRepository.delete(payment);
         log.info("Payment deleted with ID: {}", id);
+    }
+
+    private boolean shouldSendConfirmationEmail(PaymentStatus oldStatus, PaymentStatus newStatus) {
+        return !PaymentStatus.APROVADO.equals(oldStatus)
+                && PaymentStatus.APROVADO.equals(newStatus);
+    }
+
+    private void sendPaymentConfirmationEmail(Payment payment) {
+        try {
+            log.info("Preparando envio de email para pagamento aprovado: {}", payment.getId());
+
+            EmailConfirmationDTO emailData = emailMapper.toEmailConfirmationDTO(payment);
+
+            emailService.sendPaymentConfirmationEmail(emailData);
+
+        } catch (Exception e) {
+            log.error("Erro ao processar envio de email para pagamento {}: {}",
+                    payment.getId(), e.getMessage(), e);
+        }
     }
 
 }
