@@ -20,7 +20,9 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.payment.UpdatePaymentDTO;
 import com.orvian.travelapi.domain.model.Payment;
+import com.orvian.travelapi.service.exception.AccessDeniedException;
 import com.orvian.travelapi.service.impl.PaymentServiceImpl;
+import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -41,6 +43,8 @@ public class PaymentControllerImpl implements GenericController {
 
     private final PaymentServiceImpl paymentService;
 
+    private final OrvianAuthorizationService authorizationService;
+
     @PostMapping
     @Operation(summary = "Processar Pagamento", description = "Processa um pagamento com os dados fornecidos.")
     @ApiResponses({
@@ -50,7 +54,9 @@ public class PaymentControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> createPayment(@RequestBody @Valid CreatePaymentDTO dto) {
-        log.info("Creating payment with value: {}", dto.valuePaid());
+        if (!authorizationService.canModifyResource("CREATE", "payment")) {
+            throw new AccessDeniedException("Apenas administradores podem processar pagamentos");
+        }
 
         Payment payment = paymentService.create(dto);
 
@@ -65,6 +71,11 @@ public class PaymentControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<List<PaymentSearchResultDTO>> getAllPayments() {
+
+        if (!authorizationService.isCurrentUserAttendenteOrAdmin()) {
+            throw new AccessDeniedException("Apenas administradores e atendentes podem listar pagamentos");
+        }
+
         log.info("Fetching all payments");
         List<PaymentSearchResultDTO> payments = paymentService.findAll();
         log.info("Total payments found: {}", payments.size());
@@ -79,6 +90,10 @@ public class PaymentControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<PaymentSearchResultDTO> getPaymentById(@PathVariable UUID id) {
+        if (!authorizationService.isCurrentUserAttendenteOrAdmin()) {
+            throw new AccessDeniedException("Apenas administradores e atendentes podem buscar pagamentos");
+        }
+
         return ResponseEntity.ok(paymentService.findById(id));
     }
 
@@ -91,6 +106,10 @@ public class PaymentControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> updatePayment(@PathVariable UUID id, @RequestBody @Valid UpdatePaymentDTO dto) {
+        if (!authorizationService.canModifyResource("UPDATE", "payment")) {
+            throw new AccessDeniedException("Apenas administradores podem atualizar pagamentos");
+        }
+
         log.info("Updating payment with id: {}", id);
         paymentService.update(id, dto);
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a atualização for bem-sucedida
@@ -104,6 +123,11 @@ public class PaymentControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> deletePayment(@PathVariable UUID id) {
+
+        if (!authorizationService.canModifyResource("DELETE", "payment")) {
+            throw new AccessDeniedException("Apenas administradores podem excluir pagamentos");
+        }
+
         log.info("Deleting payment with id: {}", id);
         paymentService.delete(id);
         return ResponseEntity.noContent().build(); // Retorna 204 (No Content) se a exclusão for bem-sucedida

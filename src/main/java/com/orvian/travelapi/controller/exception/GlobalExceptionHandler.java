@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.orvian.travelapi.controller.dto.error.FieldErrorDTO;
 import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
+import com.orvian.travelapi.service.exception.AccessDeniedException;
 import com.orvian.travelapi.service.exception.BusinessException;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.InvalidFieldException;
@@ -75,6 +76,23 @@ public class GlobalExceptionHandler {
         return ResponseErrorDTO.of(
                 HttpStatus.UNAUTHORIZED,
                 e.getMessage() != null ? e.getMessage() : "Invalid credentials",
+                List.of(),
+                path
+        );
+    }
+
+    /*
+        Trata exceções de acesso negado do sistema Orvian, retornando um status 403 (FORBIDDEN).
+        Exemplo: quando um USER tenta acessar dados de outro usuário.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseErrorDTO handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        log.warn("Acesso negado - Path: {}, Message: {}", path, e.getMessage());
+        return ResponseErrorDTO.of(
+                HttpStatus.FORBIDDEN,
+                e.getMessage(),
                 List.of(),
                 path
         );
