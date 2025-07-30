@@ -1,9 +1,14 @@
 package com.orvian.travelapi.service.impl;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.orvian.travelapi.controller.dto.packagedate.UpdatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
@@ -98,12 +104,28 @@ public class PackageServiceImpl implements TravelPackageService {
     @Override
     public TravelPackage create(Record dto) {
         try {
-            TravelPackage travelPackage = travelPackageMapper.toTravelPackage((CreateTravelPackageDTO) dto);
+            CreateTravelPackageDTO dtoTravelPackage = (CreateTravelPackageDTO) dto;
+            log.info("Creating new travel package with title: {}", dtoTravelPackage.title());
+
+            TravelPackage travelPackage = travelPackageMapper.toTravelPackage(dtoTravelPackage);
             validateCreationAndUpdate(travelPackage);
-            return travelPackageRepository.save(travelPackage);
+            TravelPackage savedPackage = travelPackageRepository.save(travelPackage);
+
+            List<PackageDate> packageDates = travelPackageMapper.createPackageDatesForPackage(
+                    dtoTravelPackage.packageDates(),
+                    savedPackage
+            );
+
+            if (!packageDates.isEmpty()) {
+                packageDateRepository.saveAll(packageDates);
+                log.info("Created {} package dates for travel package: {}", packageDates.size(), savedPackage.getId());
+            }
+
+            return savedPackage;
+
         } catch (IllegalArgumentException e) {
-            log.error("Invalid argument provided for reservation creation: {}", e.getMessage());
-            throw new IllegalArgumentException("Invalid argument provided for reservation creation: " + e.getMessage());
+            log.error("Invalid argument provided for package creation: {}", e.getMessage());
+            throw new IllegalArgumentException("Invalid argument provided for package creation: " + e.getMessage());
         } catch (RuntimeException e) {
             handlePersistenceError(e, log);
             return null;
@@ -133,12 +155,20 @@ public class PackageServiceImpl implements TravelPackageService {
 
         try {
             TravelPackage travelPackage = packageOptional.get();
+            UpdateTravelPackageDTO updateDto = (UpdateTravelPackageDTO) dto;
+
             log.info("Updating Package with ID: {}", travelPackage.getId());
+
+            // 1. Atualizar dados do TravelPackage
+            travelPackageMapper.updateEntityFromDto(updateDto, travelPackage);
             validateCreationAndUpdate(travelPackage);
+            TravelPackage savedPackage = travelPackageRepository.save(travelPackage);
 
-            travelPackageMapper.updateEntityFromDto((UpdateTravelPackageDTO) dto, travelPackage);
+            // 2. ✅ Atualizar PackageDates se fornecido
+            if (updateDto.packageDates() != null) {
+                updatePackageDatesIncremental(savedPackage, updateDto.packageDates());
+            }
 
-            travelPackageRepository.save(travelPackage);
             log.info("Package with ID: {} updated successfully", travelPackage.getId());
         } catch (IllegalArgumentException e) {
             log.error("Invalid argument provided for payment update: {}", e.getMessage());
@@ -176,5 +206,58 @@ public class PackageServiceImpl implements TravelPackageService {
         }
 
         return !travelPackage.getId().equals(packageOptional.get().getId()) && packageOptional.isPresent();
+    }
+
+    private void updatePackageDatesIncremental(TravelPackage travelPackage, List<UpdatePackageDateDTO> packageDatesDTO) {
+        try {
+            log.info("Incrementally updating package dates for travel package: {}", travelPackage.getId());
+
+            List<PackageDate> existingDates = packageDateRepository.findByTravelPackage_Id(travelPackage.getId());
+
+            if (packageDatesDTO == null || packageDatesDTO.isEmpty()) {
+                log.info("No package dates to update - keeping existing ones");
+                return;
+            }
+
+            // Mapear datas existentes por ID (se tiverem ID no DTO)
+            Map<UUID, PackageDate> existingDatesMap = existingDates.stream()
+                    .collect(Collectors.toMap(PackageDate::getId, date -> date));
+
+            List<PackageDate> updatedDates = new ArrayList<>();
+            Set<UUID> processedIds = new HashSet<>();
+
+            for (UpdatePackageDateDTO dto : packageDatesDTO) {
+                if (dto.id() != null && existingDatesMap.containsKey(dto.id())) {
+                    // Atualizar existente
+                    PackageDate existing = existingDatesMap.get(dto.id());
+                    travelPackageMapper.updatePackageDateFromDto(dto, existing);
+                    updatedDates.add(existing);
+                    processedIds.add(dto.id());
+                } else {
+                    // Criar novo
+                    PackageDate newDate = travelPackageMapper.toPackageDate(dto, travelPackage);
+                    updatedDates.add(newDate);
+                }
+            }
+
+            // Remover datas que não foram processadas
+            List<PackageDate> datesToRemove = existingDates.stream()
+                    .filter(date -> !processedIds.contains(date.getId()))
+                    .toList();
+
+            if (!datesToRemove.isEmpty()) {
+                packageDateRepository.deleteAll(datesToRemove);
+                log.info("Removed {} package dates", datesToRemove.size());
+            }
+
+            // Salvar atualizações
+            packageDateRepository.saveAll(updatedDates);
+            log.info("Updated/created {} package dates", updatedDates.size());
+
+        } catch (Exception e) {
+            log.error("Error incrementally updating package dates for travel package {}: {}",
+                    travelPackage.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to update package dates: " + e.getMessage());
+        }
     }
 }
