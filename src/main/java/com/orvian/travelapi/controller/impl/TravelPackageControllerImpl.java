@@ -1,6 +1,8 @@
 package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -75,6 +77,28 @@ public class TravelPackageControllerImpl implements GenericController {
             @RequestParam(required = false) String title) {
 
         Page<PackageSearchResultDTO> page = packageService.findAll(pageNumber, pageSize, title);
+        PagedModel<EntityModel<PackageSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
+
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Paginação da lista de todos os Pacotes", description = "Recupera uma página contendo uma lista de usuários.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Pacotes recuperados com sucesso"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
+    })
+    public ResponseEntity<PagedModel<EntityModel<PackageSearchResultDTO>>> getPackagesBySearch(
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = true) String title,
+            @RequestParam(required = false) LocalDate startDate,
+            @RequestParam(defaultValue = "1") Integer maxPeople
+    ) {
+        LocalDate effectiveStartDate = startDate != null ? startDate : LocalDate.now(ZoneOffset.UTC);
+        log.info("Searching packages with title: {}, startDate: {}, maxPeople: {}", title, effectiveStartDate, maxPeople);
+
+        Page<PackageSearchResultDTO> page = packageService.findAllBySearch(pageNumber, pageSize, title, effectiveStartDate, maxPeople);
         PagedModel<EntityModel<PackageSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
 
         return ResponseEntity.ok(pagedModel);

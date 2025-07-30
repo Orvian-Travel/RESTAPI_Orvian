@@ -1,6 +1,8 @@
 package com.orvian.travelapi.domain.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +15,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,5 +49,25 @@ public class PackageDate {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Schema(description = "Referência ao pacote de viagem relacionado")
     private TravelPackage travelPackage;
+
+    @Column(name = "CREATED_AT", nullable = false)
+    @Schema(name = "createdAt", description = "Timestamp when the travel package was created", example = "2023-10-01T12:00:00")
+    private LocalDateTime createdAt;
+
+    @Column(name = "UPDATED_AT", nullable = false)
+    @Schema(name = "updatedAt", description = "Timestamp when the travel package was last updated", example = "2023-10-01T12:00:00")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime utcNow = LocalDateTime.now(ZoneOffset.UTC);
+        this.createdAt = utcNow;
+        this.updatedAt = utcNow;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
 
 }

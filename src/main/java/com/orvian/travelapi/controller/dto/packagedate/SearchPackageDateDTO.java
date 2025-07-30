@@ -1,6 +1,7 @@
 package com.orvian.travelapi.controller.dto.packagedate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public record SearchPackageDateDTO(
@@ -8,7 +9,9 @@ public record SearchPackageDateDTO(
         LocalDate startDate,
         LocalDate endDate,
         int qtd_available,
-        UUID travelPackageId
+        UUID travelPackageId,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
         ) {
 
 }

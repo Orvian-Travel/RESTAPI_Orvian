@@ -2,6 +2,7 @@ package com.orvian.travelapi.domain.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,6 +11,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -52,13 +55,25 @@ public class User {
 
     @Column(name = "ROLE", nullable = false, length = 20)
     @Schema(name = "role", description = "User's role in the system", example = "USER")
-    private String  role = "USER";
+    private String role = "USER";
 
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the user was created", example = "2023-10-01T12:00:00")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "UPDATED_AT", nullable = false)
     @Schema(name = "updatedAt", description = "Timestamp when the user was last updated", example = "2023-10-01T12:00:00")
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime utcNow = LocalDateTime.now(ZoneOffset.UTC);
+        this.createdAt = utcNow;
+        this.updatedAt = utcNow;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
 }
