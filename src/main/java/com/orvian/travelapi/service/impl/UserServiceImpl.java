@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder encoder;
 
     @Override
     public Page<UserSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String name) {
@@ -43,24 +45,17 @@ public class UserServiceImpl implements UserService {
             return userEntitiesPage.map(userMapper::toDTO);
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+            throw new RuntimeException("Erro ao buscar usuários: " + e.getMessage());
         }
     }
 
     @Override
     public User create(Record dto) {
-        try {
             User user = userMapper.toEntity((CreateUserDTO) dto);
             log.info("Creating user with email: {}", user.getEmail());
             validateCreationAndUpdate(user);
+            user.setPassword(encoder.encode(user.getPassword()));
             return userRepository.save(user);
-        } catch (IllegalArgumentException e) {
-            log.error("Invalid argument provided for reservation creation: {}", e.getMessage());
-            throw new IllegalArgumentException("Invalid argument provided for reservation creation: " + e.getMessage());
-        } catch (RuntimeException e) {
-            handlePersistenceError(e, log);
-            return null;
-        }
     }
 
     @Override

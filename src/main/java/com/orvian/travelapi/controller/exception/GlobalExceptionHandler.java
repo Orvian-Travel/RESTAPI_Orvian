@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,6 +61,18 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "Validation error",
                 List.of(new FieldErrorDTO(e.getField(), e.getMessage())),
+                path
+        );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseErrorDTO handleBadCredentialsException(BadCredentialsException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return ResponseErrorDTO.of(
+                HttpStatus.UNAUTHORIZED,
+                e.getMessage() != null ? e.getMessage() : "Invalid credentials",
+                List.of(),
                 path
         );
     }

@@ -1,4 +1,7 @@
 package com.orvian.travelapi.controller.dto.auth;
 
-public class LoginResponseDTO {
+public record LoginResponseDTO (
+        String token,
+        String name
+){
 }
