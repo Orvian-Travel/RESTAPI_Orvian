@@ -1,24 +1,27 @@
 package com.orvian.travelapi.service.security;
 
-import com.auth0.jwt.JWT;
-import com.orvian.travelapi.domain.model.User;
-import com.orvian.travelapi.domain.repository.UserRepository;
-import com.orvian.travelapi.service.exception.NotFoundException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.UUID;
+
 import org.springframework.lang.NonNull;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.auth0.jwt.JWT;
+import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.domain.repository.UserRepository;
+import com.orvian.travelapi.service.exception.NotFoundException;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -39,20 +42,22 @@ public class SecurityFilter extends OncePerRequestFilter {
         log.info("DEBUG: Login from token: {}", login);
 
         if (login != null) {
-            User user = userRepository.findById(UUID.fromString(login)).orElseThrow(() -> new NotFoundException("User not found with email: " + login));
+            User user = userRepository.findById(UUID.fromString(login))
+                    .orElseThrow(() -> new NotFoundException("User not found with ID: " + login));
+
             String role = JWT.decode(token).getClaim("role").asString();
 
-            // ✅ DEBUG: Verificar dados extraídos
             log.info("DEBUG: User from DB - Email: {}, Role: {}", user.getEmail(), user.getRole());
             log.info("DEBUG: Role from token: {}", role);
 
             var authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()));
             log.info("DEBUG: Authorities created: {}", authorities);
 
-            var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
+            // ✅ MUDANÇA: Usar ID como principal ao invés do objeto User
+            var authentication = new UsernamePasswordAuthenticationToken(user.getId().toString(), null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            log.info("DEBUG: Authentication set in SecurityContext");
+            log.info("DEBUG: Authentication set with ID as principal: {}", user.getId());
         }
         filterChain.doFilter(request, response);
     }

@@ -57,36 +57,8 @@ public class UserServiceImpl implements UserService {
         User user = userMapper.toEntity((CreateUserDTO) dto);
         log.info("Creating user with email: {} and requested role: {}", user.getEmail(), user.getRole());
 
-        // ✅ Verificar se o usuário atual pode atribuir a role solicitada
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
-            // ✅ Usuário autenticado - verificar permissões
-            User currentUser = userRepository.findByEmail(auth.getName())
-                    .orElseThrow(() -> new AccessDeniedException("Usuário autenticado não encontrado"));
-
-            String currentUserRole = currentUser.getRole();
-            String requestedRole = user.getRole();
-
-            if ("ADMIN".equals(currentUserRole)) {
-                // ✅ ADMIN pode criar usuário com qualquer role
-                log.info("ADMIN {} creating user with role: {}", currentUser.getEmail(), requestedRole);
-
-                // Validar se a role é válida
-                if (!isValidRole(requestedRole)) {
-                    log.warn("Invalid role requested: {}", requestedRole);
-                    throw new IllegalArgumentException("Role inválida: " + requestedRole + ". Roles válidas: USER, ATENDENTE, ADMIN");
-                }
-            } else {
-                // ✅ Usuário não-ADMIN (USER ou ATENDENTE) só pode criar com role USER
-                log.info("Non-admin user {} attempting to create user, forcing role to USER", currentUser.getEmail());
-                user.setRole("USER");
-            }
-        } else {
-            // ✅ Usuário não autenticado - registro público sempre como USER
-            log.info("Public registration for email: {}, forcing role to USER", user.getEmail());
-            user.setRole("USER");
-        }
+        // ✅ CORREÇÃO: Chamar o método que já está implementado corretamente
+        handleRoleCreationLogic(user);
 
         validateCreationAndUpdate(user);
         user.setPassword(encoder.encode(user.getPassword()));
@@ -193,7 +165,16 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isValidRole(String role) {
-        return role != null && ("USER".equals(role) || "ATENDENTE".equals(role) || "ADMIN".equals(role));
+        if (role == null || role.isBlank()) {
+            return false;
+        }
+
+        return switch (role.toUpperCase()) {
+            case "USER", "ATENDENTE", "ADMIN" ->
+                true;
+            default ->
+                false;
+        };
     }
 
     private void handleRoleUpdatePermissions(User targetUser, String newRole) {
@@ -205,16 +186,22 @@ public class UserServiceImpl implements UserService {
             throw new AccessDeniedException("Usuário não autenticado não pode alterar roles");
         }
 
-        String currentUserEmail = auth.getName();
+        String currentUserIdStr = auth.getName(); // ✅ MUDANÇA: getName() agora retorna ID
 
-        // ✅ Buscar o usuário atual
-        User currentUser = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário autenticado não encontrado"));
+        // ✅ MUDANÇA: Buscar por ID ao invés de email
+        User currentUser;
+        try {
+            UUID currentUserId = UUID.fromString(currentUserIdStr);
+            currentUser = userRepository.findById(currentUserId)
+                    .orElseThrow(() -> new AccessDeniedException("Usuário autenticado não encontrado com ID: " + currentUserIdStr));
+        } catch (IllegalArgumentException e) {
+            log.error("ID de usuário inválido no contexto de segurança: {}", currentUserIdStr);
+            throw new AccessDeniedException("ID de usuário inválido no contexto de segurança");
+        }
 
         String currentUserRole = currentUser.getRole();
 
         if (!"ADMIN".equals(currentUserRole)) {
-            // ✅ Apenas ADMIN pode alterar roles
             log.warn("Non-admin user {} (role: {}) trying to change role from {} to {} for user: {}",
                     currentUser.getEmail(), currentUserRole, targetUser.getRole(), newRole, targetUser.getEmail());
 
@@ -229,5 +216,45 @@ public class UserServiceImpl implements UserService {
 
         log.info("ADMIN {} changing role from {} to {} for user: {}",
                 currentUser.getEmail(), targetUser.getRole(), newRole, targetUser.getEmail());
+    }
+
+    private void handleRoleCreationLogic(User user) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.isAuthenticated() && !auth.getName().equals("anonymousUser")) {
+            // ✅ Usuário autenticado - verificar se pode atribuir role
+            String currentUserIdStr = auth.getName();
+
+            try {
+                UUID currentUserId = UUID.fromString(currentUserIdStr);
+                User currentUser = userRepository.findById(currentUserId)
+                        .orElseThrow(() -> new AccessDeniedException("Usuário autenticado não encontrado"));
+
+                String currentUserRole = currentUser.getRole();
+                String requestedRole = user.getRole();
+
+                if ("ADMIN".equals(currentUserRole)) {
+                    // ✅ ADMIN pode criar usuário com qualquer role
+                    log.info("ADMIN {} creating user with role: {}", currentUser.getEmail(), requestedRole);
+
+                    // Validar se a role é válida
+                    if (!isValidRole(requestedRole)) {
+                        log.warn("Invalid role requested by ADMIN: {}", requestedRole);
+                        throw new IllegalArgumentException("Role inválida: " + requestedRole + ". Roles válidas: USER, ATENDENTE, ADMIN");
+                    }
+                } else {
+                    // ✅ Usuário não-ADMIN só pode criar com role USER
+                    log.info("Non-admin user {} creating user, forcing role to USER", currentUser.getEmail());
+                    user.setRole("USER");
+                }
+            } catch (IllegalArgumentException e) {
+                log.error("ID de usuário inválido no contexto: {}", currentUserIdStr);
+                throw new AccessDeniedException("Erro interno: ID de usuário inválido");
+            }
+        } else {
+            // ✅ Usuário não autenticado (registro público) sempre como USER
+            log.info("Public user registration, setting role to USER for email: {}", user.getEmail());
+            user.setRole("USER");
+        }
     }
 }

@@ -39,37 +39,36 @@ public class OrvianAuthorizationService {
             log.warn("Tentativa de acesso sem autenticação para recurso: {}", resourceType);
             return false;
         }
+        try {
+            User currentUser = getCurrentUser(); // Método já corrigido para usar ID
+            String userRole = currentUser.getRole();
 
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"));
+            log.debug("Verificando acesso: usuário={}, role={}, recurso={}, proprietário={}",
+                    currentUser.getEmail(), userRole, resourceType, resourceOwnerId);
 
-        String userRole = currentUser.getRole();
-        log.debug("Verificando acesso: usuário={}, role={}, recurso={}, proprietário={}",
-                userEmail, userRole, resourceType, resourceOwnerId);
-
-        return switch (userRole) {
-            case "ADMIN" -> {
-                // ADMIN tem acesso total a todos os recursos
-                log.debug("Acesso liberado: usuário ADMIN");
-                yield true;
-            }
-            case "ATENDENTE" -> {
-                // ATENDENTE pode visualizar recursos de outros usuários
-                log.debug("Acesso liberado: usuário ATENDENTE");
-                yield true;
-            }
-            case "USER" -> {
-                // USER só pode acessar seus próprios recursos
-                boolean isOwner = currentUser.getId().equals(resourceOwnerId);
-                log.debug("Verificação de propriedade para USER: isOwner={}", isOwner);
-                yield isOwner;
-            }
-            default -> {
-                log.warn("Role não reconhecida: {}", userRole);
-                yield false;
-            }
-        };
+            return switch (userRole) {
+                case "ADMIN" -> {
+                    log.debug("Acesso liberado: usuário ADMIN");
+                    yield true;
+                }
+                case "ATENDENTE" -> {
+                    log.debug("Acesso liberado: usuário ATENDENTE");
+                    yield true;
+                }
+                case "USER" -> {
+                    boolean isOwner = currentUser.getId().equals(resourceOwnerId);
+                    log.debug("Verificação de propriedade para USER: isOwner={}", isOwner);
+                    yield isOwner;
+                }
+                default -> {
+                    log.warn("Role não reconhecida: {}", userRole);
+                    yield false;
+                }
+            };
+        } catch (Exception e) {
+            log.error("Erro ao verificar acesso ao recurso: {}", e.getMessage(), e);
+            return false;
+        }
     }
 
     /**
@@ -81,25 +80,22 @@ public class OrvianAuthorizationService {
      * @return true se pode modificar, false caso contrário
      */
     public boolean canModifyResource(String operation, String resourceType) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            // ✅ CORREÇÃO: Usar getCurrentUser() em vez de buscar por email
+            User currentUser = getCurrentUser();
+            String userRole = currentUser.getRole();
 
-        if (auth == null || !auth.isAuthenticated()) {
+            // Apenas ADMIN pode realizar operações de modificação
+            boolean canModify = "ADMIN".equals(userRole);
+
+            log.debug("Verificação de modificação: usuário={}, role={}, operação={}, recurso={}, permitido={}",
+                    currentUser.getEmail(), userRole, operation, resourceType, canModify);
+
+            return canModify;
+        } catch (Exception e) {
+            log.error("Erro em canModifyResource: {}", e.getMessage(), e);
             return false;
         }
-
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"));
-
-        String userRole = currentUser.getRole();
-
-        // Apenas ADMIN pode realizar operações de modificação
-        boolean canModify = "ADMIN".equals(userRole);
-
-        log.debug("Verificação de modificação: usuário={}, role={}, operação={}, recurso={}, permitido={}",
-                userEmail, userRole, operation, resourceType, canModify);
-
-        return canModify;
     }
 
     /**
@@ -111,30 +107,41 @@ public class OrvianAuthorizationService {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
         if (auth == null || !auth.isAuthenticated()) {
+            log.warn("Tentativa de acesso sem autenticação válida");
             throw new AccessDeniedException("Usuário não autenticado");
         }
 
-        // ✅ CORREÇÃO: Usar instanceof patterns (Java 16+) e tratar null
         Object principal = auth.getPrincipal();
 
         if (principal == null) {
+            log.error("Principal é null para usuário autenticado");
             throw new AccessDeniedException("Principal é null");
         }
 
+        // ✅ MUDANÇA: Usar switch pattern com ID como String
         return switch (principal) {
             case User user -> {
-                // ✅ Pattern matching - Se já é um User, retornar direto
-                log.debug("Principal já é objeto User: {}", user.getEmail());
+                // Se ainda é um User object (compatibilidade)
+                log.debug("Principal é objeto User: {}", user.getEmail());
                 yield user;
             }
-            case String userEmail -> {
-                // ✅ Pattern matching - Se é String (email), buscar no banco
-                log.debug("Principal é email, buscando usuário: {}", userEmail);
-                yield userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado: " + userEmail));
+            case String userId -> {
+                // ✅ NOVO: Principal é ID do usuário
+                log.debug("Principal é ID do usuário, buscando: {}", userId);
+                try {
+                    UUID userUuid = UUID.fromString(userId);
+                    yield userRepository.findById(userUuid)
+                    .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado com ID: " + userId));
+                } catch (IllegalArgumentException e) {
+                    log.error("ID de usuário inválido: {}", userId);
+                    throw new AccessDeniedException("ID de usuário inválido: " + userId);
+                }
             }
-            default ->
-                throw new AccessDeniedException("Tipo de principal não reconhecido: " + principal.getClass().getSimpleName());
+            default -> {
+                String principalType = principal.getClass().getSimpleName();
+                log.error("Tipo de principal não reconhecido: {} para auth: {}", principalType, auth);
+                throw new AccessDeniedException("Tipo de principal não reconhecido: " + principalType);
+            }
         };
     }
 
@@ -191,75 +198,68 @@ public class OrvianAuthorizationService {
      * @return true se pode acessar, false caso contrário
      */
     public boolean canAccessUserData(UUID targetUserId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            // ✅ CORREÇÃO: Usar getCurrentUser() em vez de buscar por email
+            User currentUser = getCurrentUser();
+            String currentRole = currentUser.getRole();
 
-        if (auth == null || !auth.isAuthenticated()) {
+            return switch (currentRole) {
+                case "ADMIN", "ATENDENTE" -> {
+                    // ADMIN e ATENDENTE podem acessar dados de qualquer usuário
+                    log.debug("{} accessing user data for userId: {}", currentRole, targetUserId);
+                    yield true;
+                }
+                case "USER" -> {
+                    // USER só pode acessar seus próprios dados
+                    boolean isOwnData = currentUser.getId().equals(targetUserId);
+                    log.debug("USER {} accessing own data: {}", currentUser.getEmail(), isOwnData);
+                    yield isOwnData;
+                }
+                default -> {
+                    log.warn("Unknown role: {}", currentRole);
+                    yield false;
+                }
+            };
+        } catch (Exception e) {
+            log.error("Erro em canAccessUserData: {}", e.getMessage(), e);
             return false;
         }
-
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"));
-
-        String currentRole = currentUser.getRole();
-
-        return switch (currentRole) {
-            case "ADMIN", "ATENDENTE" -> {
-                // ADMIN e ATENDENTE podem acessar dados de qualquer usuário
-                log.debug("{} accessing user data for userId: {}", currentRole, targetUserId);
-                yield true;
-            }
-            case "USER" -> {
-                // USER só pode acessar seus próprios dados
-                boolean isOwnData = currentUser.getId().equals(targetUserId);
-                log.debug("USER {} accessing own data: {}", currentUser.getEmail(), isOwnData);
-                yield isOwnData;
-            }
-            default -> {
-                log.warn("Unknown role: {}", currentRole);
-                yield false;
-            }
-        };
     }
 
     public boolean canCreateResourceForUser(UUID targetUserId, String resourceType) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            // ✅ CORREÇÃO: Usar getCurrentUser() em vez de buscar por email
+            User currentUser = getCurrentUser();
+            String currentRole = currentUser.getRole();
 
-        if (auth == null || !auth.isAuthenticated()) {
-            log.warn("Unauthenticated user trying to create {} for user: {}", resourceType, targetUserId);
+            return switch (currentRole) {
+                case "ADMIN" -> {
+                    // ADMIN pode criar para qualquer usuário
+                    log.info("ADMIN {} creating {} for user: {}", currentUser.getEmail(), resourceType, targetUserId);
+                    yield true;
+                }
+                case "USER", "ATENDENTE" -> {
+                    // USER/ATENDENTE só pode criar para si mesmo
+                    boolean isSelf = currentUser.getId().equals(targetUserId);
+
+                    if (isSelf) {
+                        log.info("User {} creating {} for themselves", currentUser.getEmail(), resourceType);
+                    } else {
+                        log.warn("User {} (role: {}) trying to create {} for different user: {}",
+                                currentUser.getEmail(), currentRole, resourceType, targetUserId);
+                    }
+
+                    yield isSelf;
+                }
+                default -> {
+                    log.warn("Unknown role: {}", currentRole);
+                    yield false;
+                }
+            };
+        } catch (Exception e) {
+            log.error("Erro em canCreateResourceForUser: {}", e.getMessage(), e);
             return false;
         }
-
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"));
-
-        String currentRole = currentUser.getRole();
-
-        return switch (currentRole) {
-            case "ADMIN" -> {
-                // ADMIN pode criar para qualquer usuário
-                log.info("ADMIN {} creating {} for user: {}", currentUser.getEmail(), resourceType, targetUserId);
-                yield true;
-            }
-            case "USER", "ATENDENTE" -> {
-                // USER/ATENDENTE só pode criar para si mesmo
-                boolean isSelf = currentUser.getId().equals(targetUserId);
-
-                if (isSelf) {
-                    log.info("User {} creating {} for themselves", currentUser.getEmail(), resourceType);
-                } else {
-                    log.warn("User {} (role: {}) trying to create {} for different user: {}",
-                            currentUser.getEmail(), currentRole, resourceType, targetUserId);
-                }
-
-                yield isSelf;
-            }
-            default -> {
-                log.warn("Unknown role: {}", currentRole);
-                yield false;
-            }
-        };
     }
 
     public UUID getEffectiveUserIdForListing(UUID requestedUserId) {
@@ -297,44 +297,37 @@ public class OrvianAuthorizationService {
      * @return true se pode atualizar, false caso contrário
      */
     public boolean canUpdateUser(UUID targetUserId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        try {
+            User currentUser = getCurrentUser(); // ✅ Usa o getCurrentUser() atualizado
+            String currentRole = currentUser.getRole();
 
-        if (auth == null || !auth.isAuthenticated()) {
+            return switch (currentRole) {
+                case "ADMIN" -> {
+                    log.info("ADMIN {} updating user: {}", currentUser.getEmail(), targetUserId);
+                    yield true;
+                }
+                case "USER" -> {
+                    boolean isOwnData = currentUser.getId().equals(targetUserId);
+                    if (isOwnData) {
+                        log.info("USER {} updating own data", currentUser.getEmail());
+                    } else {
+                        log.warn("USER {} trying to update different user: {}", currentUser.getEmail(), targetUserId);
+                    }
+                    yield isOwnData;
+                }
+                case "ATENDENTE" -> {
+                    log.warn("ATENDENTE {} trying to update user: {}", currentUser.getEmail(), targetUserId);
+                    yield false;
+                }
+                default -> {
+                    log.warn("Unknown role: {}", currentRole);
+                    yield false;
+                }
+            };
+        } catch (Exception e) {
+            log.error("Error in canUpdateUser: {}", e.getMessage(), e);
             return false;
         }
-
-        String userEmail = auth.getName();
-        User currentUser = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"));
-
-        String currentRole = currentUser.getRole();
-
-        return switch (currentRole) {
-            case "ADMIN" -> {
-                // ADMIN pode atualizar qualquer usuário
-                log.info("ADMIN {} updating user: {}", currentUser.getEmail(), targetUserId);
-                yield true;
-            }
-            case "USER" -> {
-                // USER só pode atualizar seus próprios dados
-                boolean isOwnData = currentUser.getId().equals(targetUserId);
-                if (isOwnData) {
-                    log.info("USER {} updating own data", currentUser.getEmail());
-                } else {
-                    log.warn("USER {} trying to update different user: {}", currentUser.getEmail(), targetUserId);
-                }
-                yield isOwnData;
-            }
-            case "ATENDENTE" -> {
-                // ATENDENTE não pode atualizar usuários
-                log.warn("ATENDENTE {} trying to update user: {}", currentUser.getEmail(), targetUserId);
-                yield false;
-            }
-            default -> {
-                log.warn("Unknown role: {}", currentRole);
-                yield false;
-            }
-        };
     }
 
 }
