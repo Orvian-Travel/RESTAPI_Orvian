@@ -1,16 +1,17 @@
 package com.orvian.travelapi.service.security;
 
-import com.orvian.travelapi.domain.model.User;
-import com.orvian.travelapi.domain.repository.UserRepository;
-import com.orvian.travelapi.service.exception.NotFoundException;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.domain.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

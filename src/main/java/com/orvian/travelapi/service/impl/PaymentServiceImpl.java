@@ -36,6 +36,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final EmailMapper emailMapper;
 
     @Override
+
     public List<PaymentSearchResultDTO> findAll() {
         try {
             log.info("Retrieving all payments");

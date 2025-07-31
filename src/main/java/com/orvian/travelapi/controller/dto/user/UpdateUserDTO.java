@@ -36,6 +36,9 @@ public record UpdateUserDTO(
         @Schema(name = "birthDate", description = "Data de nascimento do usuário no formato ISO (AAAA-MM-DD)", example = "1990-01-01")
         LocalDate birthDate,
         @ValidRole
+        @Schema(name = "role", description = "Cargo do usuário (apenas ADMIN pode alterar)",
+                example = "USER", allowableValues = {"USER", "ATENDENTE", "ADMIN"})
         String role
-) {
+        ) {
+
 }

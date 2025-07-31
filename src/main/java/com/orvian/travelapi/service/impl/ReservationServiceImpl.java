@@ -53,19 +53,19 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public Page<ReservationSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, UUID userID) {
         try {
-
             log.info("Retrieving all reservations for user ID: {}", userID);
+
+            // ✅ IMPORTANTE: Se userID for null, spec deve ser null (sem filtro)
             Specification<Reservation> spec = (userID != null) ? ReservationSpecs.userIdEquals(userID) : null;
 
             Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
 
             return reservationRepository
-                    .findAll(spec, pageRequest)
+                    .findAll(spec, pageRequest) // ✅ spec=null significa "todas as reservas"
                     .map(reservation -> {
                         Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
                         return reservationMapper.toDTO(reservation, payment);
                     });
-
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
@@ -168,6 +168,24 @@ public class ReservationServiceImpl implements ReservationService {
                     return reservation;
                 })
                 .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + id));
+    }
+
+    public boolean isReservationOwnedByUser(UUID reservationId, UUID userId) {
+        try {
+            Reservation reservation = reservationRepository.findById(reservationId)
+                    .orElseThrow(() -> new NotFoundException("Reservation not found with id: " + reservationId));
+
+            UUID reservationOwnerId = reservation.getUser().getId();
+            boolean isOwner = reservationOwnerId.equals(userId);
+
+            log.debug("Reservation ownership check: reservationId={}, userId={}, isOwner={}",
+                    reservationId, userId, isOwner);
+
+            return isOwner;
+        } catch (Exception e) {
+            log.error("Error checking reservation ownership: {}", e.getMessage());
+            return false;
+        }
     }
 
 }

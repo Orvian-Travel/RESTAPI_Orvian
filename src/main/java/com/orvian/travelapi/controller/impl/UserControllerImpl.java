@@ -24,7 +24,9 @@ import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.service.exception.AccessDeniedException;
 import com.orvian.travelapi.service.impl.UserServiceImpl;
+import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,6 +48,8 @@ public class UserControllerImpl implements GenericController {
     private final UserServiceImpl userService;
 
     private final PagedResourcesAssembler<UserSearchResultDTO> pagedResourcesAssembler;
+
+    private final OrvianAuthorizationService authorizationService;
 
     @PostMapping
     @Operation(summary = "Criar um novo Usuário", description = "Cria um novo usuário com as credenciais oferecidas.")
@@ -77,6 +81,10 @@ public class UserControllerImpl implements GenericController {
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String name) {
 
+        if (!authorizationService.isCurrentUserAttendenteOrAdmin()) {
+            throw new AccessDeniedException("Apenas administradores e atendentes podem listar usuários");
+        }
+
         Page<UserSearchResultDTO> page = userService.findAll(pageNumber, pageSize, name);
         PagedModel<EntityModel<UserSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
 
@@ -91,6 +99,9 @@ public class UserControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<UserSearchResultDTO> getUserById(@PathVariable UUID id) {
+        if (!authorizationService.canAccessUserData(id)) {
+            throw new AccessDeniedException("Você não tem permissão para acessar dados deste usuário");
+        }
         return ResponseEntity.ok(userService.findById(id));
     }
 
@@ -104,6 +115,11 @@ public class UserControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> updateUser(@PathVariable UUID id, @RequestBody @Valid UpdateUserDTO dto) {
+
+        if (!authorizationService.canUpdateUser(id)) {
+            throw new AccessDeniedException("Você não tem permissão para atualizar este usuário");
+        }
+
         log.info("Updating user with id: {}", id);
         userService.update(id, dto);
         return ResponseEntity.noContent().build();
@@ -117,6 +133,10 @@ public class UserControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor", content = @Content(schema = @Schema(implementation = ResponseErrorDTO.class)))
     })
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        if (!authorizationService.canModifyResource("DELETE", "user")) {
+            throw new AccessDeniedException("Apenas administradores podem excluir usuários");
+        }
+
         log.info("Deleting user with id: {}", id);
         userService.delete(id);
         return ResponseEntity.noContent().build();
