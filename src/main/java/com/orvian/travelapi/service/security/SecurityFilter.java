@@ -18,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -38,7 +39,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         log.info("DEBUG: Login from token: {}", login);
 
         if (login != null) {
-            User user = userRepository.findByEmail(login).orElseThrow(() -> new NotFoundException("User not found with email: " + login));
+            User user = userRepository.findById(UUID.fromString(login)).orElseThrow(() -> new NotFoundException("User not found with email: " + login));
             String role = JWT.decode(token).getClaim("role").asString();
 
             // ✅ DEBUG: Verificar dados extraídos
