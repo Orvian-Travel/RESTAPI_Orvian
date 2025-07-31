@@ -31,7 +31,7 @@ public class SecurityConfig {
                 // ===== ENDPOINTS PÚBLICOS =====
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Autenticação e registro público
-                .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                 // Health check e documentação
                 .requestMatchers("/api/v1/health/**").permitAll()
