@@ -106,6 +106,22 @@ public class UserServiceImpl implements UserService {
         log.info("User with ID: {} deleted successfully", id);
     }
 
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public void resetUserPassword(String userEmail, String newPassword) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("User with email " + userEmail + " not found."));
+
+        if (encoder.matches(newPassword, user.getPassword())) {
+            throw new IllegalArgumentException("New password cannot be the same as the current one.");
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
     private void validateCreationAndUpdate(User user) {
         if (isDuplicateUser(user)) {
             log.error("User already registered: {}", user);
