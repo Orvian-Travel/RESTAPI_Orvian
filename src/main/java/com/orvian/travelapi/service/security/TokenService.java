@@ -24,7 +24,7 @@ public class TokenService {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
             return JWT.create()
-                    .withSubject(user.getEmail())
+                    .withSubject(user.getId().toString())
                     .withClaim("role", user.getRole())
                     .withIssuer("orvian-travel-api")
                     .withExpiresAt(Date.from(generateExpirationDate()))
