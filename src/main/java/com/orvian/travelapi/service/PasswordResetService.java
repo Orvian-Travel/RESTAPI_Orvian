@@ -1,15 +1,15 @@
 package com.orvian.travelapi.service;
 
-import com.orvian.travelapi.domain.model.PasswordResetToken;
-import com.orvian.travelapi.domain.model.User;
-import com.orvian.travelapi.domain.repository.PasswordResetTokenRepository;
-import com.orvian.travelapi.service.exception.NotFoundException;
-import com.orvian.travelapi.service.impl.UserServiceImpl;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.orvian.travelapi.domain.model.PasswordResetToken;
+import com.orvian.travelapi.domain.repository.PasswordResetTokenRepository;
+import com.orvian.travelapi.service.impl.UserServiceImpl;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
