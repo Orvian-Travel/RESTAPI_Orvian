@@ -60,9 +60,8 @@ public class Reservation {
     @JoinColumn(name = "ID_RESERVATION")
     private List<Traveler> travelers;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)
-    @Schema(name = "idPackageDate", description = "Travel package date associated with the reservation", example = "123e4567-e89b-12d3-a456-426614174001")
     private PackageDate packageDate;
 
     @Column(name = "CREATED_AT", nullable = false)

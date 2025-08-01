@@ -6,7 +6,6 @@ import java.time.ZoneOffset;
 import java.util.UUID;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -45,8 +44,8 @@ public class PackageDate {
     @Schema(description = "Quantidade disponível para o pacote", example = "20")
     private int qtd_available;
 
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_PACKAGE", nullable = false)
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Schema(description = "Referência ao pacote de viagem relacionado")
     private TravelPackage travelPackage;
 

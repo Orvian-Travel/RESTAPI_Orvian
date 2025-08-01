@@ -46,5 +46,8 @@ public interface ReservationMapper {
     ReservationSearchResultDTO toDTO(Reservation reservation, Payment payment);
 
     @Mapping(target = "travelPackageId", source = "travelPackage.id")
+    @Mapping(target = "packageTitle", source = "travelPackage.title")
+    @Mapping(target = "packageDestination", source = "travelPackage.destination")
+    @Mapping(target = "packageDuration", source = "travelPackage.duration")
     SearchPackageDateDTO toDTO(PackageDate packageDate);
 }
