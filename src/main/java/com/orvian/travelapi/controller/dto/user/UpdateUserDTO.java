@@ -7,12 +7,6 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-/*
-        DTO para a atualizar um usuário existente.
-        O @Schema é usado para documentar o DTO na API OpenAPI com Swagger.
-        Coloquei as validações necessárias em cada campo, já com as mensagens de erro apropriadas.
-*/
-
 @Schema(
         name = "UpdateUserDTO",
         description = "Data Transfer Object for updating an existing user",
@@ -42,6 +36,9 @@ public record UpdateUserDTO(
         @Schema(name = "birthDate", description = "Data de nascimento do usuário no formato ISO (AAAA-MM-DD)", example = "1990-01-01")
         LocalDate birthDate,
         @ValidRole
+        @Schema(name = "role", description = "Cargo do usuário (apenas ADMIN pode alterar)",
+                example = "USER", allowableValues = {"USER", "ATENDENTE", "ADMIN"})
         String role
-) {
+        ) {
+
 }

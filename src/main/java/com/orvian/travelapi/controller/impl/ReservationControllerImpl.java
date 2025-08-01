@@ -1,24 +1,30 @@
 package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orvian.travelapi.controller.GenericController;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Reservation;
-import com.orvian.travelapi.service.impl.ReservationServiceImpl;
+import com.orvian.travelapi.service.ReservationService;
+import com.orvian.travelapi.service.exception.AccessDeniedException;
+import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,7 +41,11 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Gerenciamento de Reservas", description = "Endpoints para gerenciamento de reservas")
 public class ReservationControllerImpl implements GenericController {
 
-    private final ReservationServiceImpl reservationService;
+    private final ReservationService reservationService;
+
+    private final PagedResourcesAssembler<ReservationSearchResultDTO> pagedResourcesAssembler;
+
+    private final OrvianAuthorizationService authorizationService;
 
     @PostMapping
     @Operation(summary = "Criar uma nova reserva", description = "Cria uma nova reserva com os detalhes fornecidos.")
@@ -46,6 +56,10 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<Void> create(@Valid @RequestBody CreateReservationDTO dto) {
+        if (!authorizationService.canCreateResourceForUser(dto.userId(), "reservation")) {
+            throw new AccessDeniedException("Você só pode criar reservas para si mesmo. Para criar reservas para outros usuários, contate um administrador.");
+        }
+
         Reservation reservation = reservationService.create(dto);
         URI location = generateHeaderLocation(reservation.getId());
         return ResponseEntity.created(location).build();
@@ -57,10 +71,53 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "200", description = "Reservas recuperadas com sucesso"),
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
-    public ResponseEntity<List<ReservationSearchResultDTO>> findAll() {
-        log.info("Fetching all reservations");
-        List<ReservationSearchResultDTO> reservations = reservationService.findAll();
-        return ResponseEntity.ok(reservations);
+    public ResponseEntity<PagedModel<EntityModel<ReservationSearchResultDTO>>> getReservationsByPage(
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) UUID userId) {
+
+        log.info("DEBUG: Received parameters - pageNumber: {}, pageSize: {}, userId: {}",
+                pageNumber, pageSize, userId);
+
+        UUID effectiveUserId = authorizationService.getEffectiveUserIdForListing(userId);
+
+        log.info("Fetching reservations for userId: {}", effectiveUserId);
+        Page<ReservationSearchResultDTO> page = reservationService.findAll(pageNumber, pageSize, effectiveUserId);
+
+        // ✅ DEBUG: Log dos resultados
+        log.info("DEBUG: Found {} reservations, total pages: {}", page.getTotalElements(), page.getTotalPages());
+
+        PagedModel<EntityModel<ReservationSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
+
+        return ResponseEntity.ok(pagedModel);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Buscar reservas com filtros", description = "Busca reservas com filtros de usuário e status.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Reservas recuperadas com sucesso"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<PagedModel<EntityModel<ReservationSearchResultDTO>>> getReservationsBySearch(
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) ReservationSituation status) {
+
+        log.info("DEBUG: Search parameters - pageNumber: {}, pageSize: {}, userId: {}, status: {}",
+                pageNumber, pageSize, userId, status);
+
+        UUID effectiveUserId = authorizationService.getEffectiveUserIdForListing(userId);
+
+        log.info("Fetching reservations for userId: {} with status filter: {}", effectiveUserId, status);
+
+        Page<ReservationSearchResultDTO> page = reservationService.findAllByStatus(
+                pageNumber, pageSize, effectiveUserId, status);
+
+        log.info("DEBUG: Found {} reservations, total pages: {}", page.getTotalElements(), page.getTotalPages());
+
+        PagedModel<EntityModel<ReservationSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
+        return ResponseEntity.ok(pagedModel);
     }
 
     @GetMapping("/{id}")
@@ -71,6 +128,10 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<ReservationSearchResultDTO> findById(@PathVariable UUID id) {
+        if (!authorizationService.canAccessReservation(id)) {
+            throw new AccessDeniedException("Você só pode visualizar suas próprias reservas");
+        }
+
         ReservationSearchResultDTO reservation = reservationService.findById(id);
         return ResponseEntity.ok(reservation);
     }
@@ -83,21 +144,13 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        if (!authorizationService.canModifyResource("DELETE", "reservation")) {
+            throw new AccessDeniedException("Apenas administradores podem excluir reservas");
+        }
+
         log.info("Deleting reservation with ID: {}", id);
         reservationService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/cancel/{id}")
-    @Operation(summary = "Cancelar reserva por ID", description = "Atualiza o status de uma reserva para cancelada pelo seu ID.")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Reserva cancelada com sucesso"),
-        @ApiResponse(responseCode = "404", description = "Reserva não encontrada"),
-        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
-    })
-    public ResponseEntity<Void> updateCancel(@PathVariable UUID id) {
-        log.info("Updating reservation with ID: {}", id);
-        reservationService.updateCancel(id);
-        return ResponseEntity.ok().build();
-    }
 }

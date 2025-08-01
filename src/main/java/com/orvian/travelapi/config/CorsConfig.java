@@ -11,8 +11,14 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOrigins(
+                    "http://localhost:4200",
+                    "https://localhost:4200",
+                    "https://orvian-travel.azurewebsites.net",
+                    "https://orvian-travel-api.azurewebsites.net"
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*");
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }

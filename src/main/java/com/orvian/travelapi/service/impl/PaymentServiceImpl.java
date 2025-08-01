@@ -4,18 +4,21 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import com.orvian.travelapi.controller.dto.email.EmailConfirmationDTO;
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.payment.UpdatePaymentDTO;
+import com.orvian.travelapi.domain.enums.PaymentStatus;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
+import com.orvian.travelapi.mapper.EmailMapper;
 import com.orvian.travelapi.mapper.PaymentMapper;
+import com.orvian.travelapi.service.EmailNotificationService;
 import com.orvian.travelapi.service.PaymentService;
-import com.orvian.travelapi.service.exception.BusinessException;
 import com.orvian.travelapi.service.exception.NotFoundException;
+import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +32,11 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final EmailNotificationService emailService;
+    private final EmailMapper emailMapper;
 
     @Override
+
     public List<PaymentSearchResultDTO> findAll() {
         try {
             log.info("Retrieving all payments");
@@ -56,9 +62,9 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (IllegalArgumentException e) {
             log.error("Invalid argument provided for payment update: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
-        } catch (DataIntegrityViolationException e) {
-            handleErrorSQL(e);
-            return null; // This line will not be reached, but is needed to satisfy the compiler
+        } catch (RuntimeException e) {
+            handlePersistenceError(e, log);
+            return null;
         }
     }
 
@@ -80,22 +86,26 @@ public class PaymentServiceImpl implements PaymentService {
 
         try {
             Payment payment = paymentOptional.get();
+            PaymentStatus oldStatus = payment.getStatus();
             log.info("Updating payment with ID: {}", id);
             paymentMapper.updateEntityFromDTO((UpdatePaymentDTO) dto, payment);
 
-            paymentRepository.save(payment);
+            Payment savedPayment = paymentRepository.save(payment);
+            paymentRepository.flush();
+
+            if (shouldSendConfirmationEmail(oldStatus, savedPayment.getStatus())) {
+                sendPaymentConfirmationEmail(savedPayment);
+            }
+
             log.info("Payment updated with ID: {}", payment.getId());
 
         } catch (IllegalArgumentException e) {
             log.error("Invalid argument provided for payment update: {}", e.getMessage());
             throw new IllegalArgumentException("Invalid argument provided for payment update: " + e.getMessage());
 
-        } catch (DataIntegrityViolationException e) {
-            handleErrorSQL(e);
-
-        } catch (Exception e) {
-            log.error("Unexpected error updating payment: {}", e.getMessage());
-            throw new RuntimeException("Unexpected error updating payment: " + e.getMessage());
+        } catch (RuntimeException e) {
+            log.error("Failed to update payment with ID {}: {}", id, e.getMessage());
+            handlePersistenceError(e, log);
         }
     }
 
@@ -114,13 +124,23 @@ public class PaymentServiceImpl implements PaymentService {
         log.info("Payment deleted with ID: {}", id);
     }
 
-    private void handleErrorSQL(DataIntegrityViolationException e) {
-        Throwable rootCause = e.getRootCause();
-        String message = (rootCause != null && rootCause.getMessage() != null)
-                ? rootCause.getMessage()
-                : e.getMessage();
-        log.error("Database integrity error: {}", message);
-        throw new BusinessException("Falha ao criar pagamento: " + message);
+    private boolean shouldSendConfirmationEmail(PaymentStatus oldStatus, PaymentStatus newStatus) {
+        return !PaymentStatus.APROVADO.equals(oldStatus)
+                && PaymentStatus.APROVADO.equals(newStatus);
+    }
+
+    private void sendPaymentConfirmationEmail(Payment payment) {
+        try {
+            log.info("Preparando envio de email para pagamento aprovado: {}", payment.getId());
+
+            EmailConfirmationDTO emailData = emailMapper.toEmailConfirmationDTO(payment);
+
+            emailService.sendPaymentConfirmationEmail(emailData);
+
+        } catch (Exception e) {
+            log.error("Erro ao processar envio de email para pagamento {}: {}",
+                    payment.getId(), e.getMessage(), e);
+        }
     }
 
 }

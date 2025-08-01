@@ -1,15 +1,10 @@
 package com.orvian.travelapi.controller.dto.user;
 
+import com.orvian.travelapi.annotation.ValidRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 import java.util.UUID;
-
-/*
-         DTO para o resultado de uma busca de usuário.
-         O @Schema é usado para documentar o DTO na API OpenAPI com Swagger..
-         Criei esse DTO para retornar apenas os dados necessários de um usuário, assim não expondo informações sensíveis como senha.
- */
 
 @Schema(
         name = "UserSearchResultDTO",
@@ -28,6 +23,10 @@ public record UserSearchResultDTO(
         @Schema(name = "document", description = "Documento de identificação do usuário", example = "123.456.789-10 ou AZ123456")
         String document,
         @Schema(name = "birthDate", description = "Data de nascimento do usuário no formato ISO (AAAA-MM-DD)", example = "1990-01-01")
-        LocalDate birthDate
+        LocalDate birthDate,
+        @ValidRole
+        @Schema(name = "role", description = "Cargo do usuário (apenas ADMIN pode alterar)",
+                example = "USER", allowableValues = {"USER", "ATENDENTE", "ADMIN"})
+        String role
 ) {
 }

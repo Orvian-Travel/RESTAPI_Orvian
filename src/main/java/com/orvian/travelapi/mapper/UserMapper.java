@@ -12,12 +12,6 @@ import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 
-/*
-    Mapper para a entidade de usuário.
-    @Mapper é uma anotação do MapStruct que gera a implementação da interface em tempo de compilação.
-    O componenteModel = "spring" permite que o MapStruct gere um bean Spring, facilitando a injeção de dependências.
-    O @BeanMapping com nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE serve para ignorar os valores nulos na hora de fazer o mapeamento de atualização.
- */
 @Mapper(componentModel = "spring", config = MapStructConfig.class)
 public interface UserMapper {
 

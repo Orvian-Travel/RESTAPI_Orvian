@@ -1,9 +1,11 @@
 package com.orvian.travelapi.domain.repository;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,7 +14,7 @@ import com.orvian.travelapi.domain.model.Reservation;
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
     @EntityGraph(attributePaths = {"travelers"})
-    List<Reservation> findAll();
+    Page<Reservation> findAll(Specification<Reservation> spec, Pageable pageable);
 
     @EntityGraph(attributePaths = {"travelers"})
     Optional<Reservation> findById(UUID id);

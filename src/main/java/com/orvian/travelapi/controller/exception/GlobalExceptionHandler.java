@@ -5,7 +5,11 @@ import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -13,17 +17,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.orvian.travelapi.controller.dto.error.FieldErrorDTO;
 import com.orvian.travelapi.controller.dto.error.ResponseErrorDTO;
+import com.orvian.travelapi.service.exception.AccessDeniedException;
 import com.orvian.travelapi.service.exception.BusinessException;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.InvalidFieldException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 
 /*
     GlobalExceptionHandler padrão do Spring Boot para tratar exceções de forma centralizada.
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /*
@@ -62,6 +69,51 @@ public class GlobalExceptionHandler {
                 List.of(new FieldErrorDTO(e.getField(), e.getMessage())),
                 path
         );
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseErrorDTO handleBadCredentialsException(BadCredentialsException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return ResponseErrorDTO.of(
+                HttpStatus.UNAUTHORIZED,
+                e.getMessage() != null ? e.getMessage() : "Invalid credentials",
+                List.of(),
+                path
+        );
+    }
+
+    /*
+        Trata exceções de acesso negado do sistema Orvian, retornando um status 403 (FORBIDDEN).
+        Exemplo: quando um USER tenta acessar dados de outro usuário.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseErrorDTO handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        // ✅ CORREÇÃO: Usar mensagem específica da exceção
+        String message = e.getMessage();
+
+        // ✅ Log mais detalhado para debug
+        log.warn("Acesso negado - Path: {}, Message: {}, User: {}",
+                path, message, getCurrentUserForLog());
+
+        return ResponseErrorDTO.of(
+                HttpStatus.FORBIDDEN,
+                message, // ✅ Usar a mensagem específica da exceção
+                List.of(),
+                path
+        );
+    }
+
+    private String getCurrentUserForLog() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            return auth != null ? auth.getName() : "anonymous";
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 
     /*
@@ -118,13 +170,48 @@ public class GlobalExceptionHandler {
             message = root.getMessage();
         }
         return ResponseErrorDTO.of(HttpStatus.CONFLICT, message, List.of(), path);
+
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public ResponseErrorDTO handleHttpRequestMethodNotSupportedException(
+            HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
+
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        String supportedMethods = String.join(", ", e.getSupportedMethods());
+
+        String message = String.format("Method '%s' is not supported for this endpoint. Supported methods: %s",
+                method, supportedMethods);
+
+        log.warn("Method not allowed - Path: {}, Method used: {}, Supported methods: {}",
+                path, method, supportedMethods);
+
+        return ResponseErrorDTO.of(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                message,
+                List.of(),
+                path
+        );
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseErrorDTO handleGenericException(Exception e, HttpServletRequest request) {
         String path = request.getRequestURI();
+
         // Log detalhado para análise interna
+        String rootCauseMessage = "";
+        if (e.getCause() != null) {
+            rootCauseMessage = " - Root cause: " + e.getCause().getClass().getSimpleName()
+                    + " - Root message: " + e.getCause().getMessage();
+        }
+
+        // Log completo para desenvolvimento usando SLF4J
+        log.error("Internal server error in path: {} - Exception: {} - Message: {}{}",
+                path, e.getClass().getSimpleName(), e.getMessage(), rootCauseMessage, e);
+
         return ResponseErrorDTO.of(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred",

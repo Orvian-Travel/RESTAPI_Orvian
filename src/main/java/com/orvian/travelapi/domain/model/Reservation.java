@@ -2,23 +2,26 @@ package com.orvian.travelapi.domain.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
 import com.orvian.travelapi.domain.enums.ReservationSituation;
+import com.orvian.travelapi.domain.enums.converter.ReservationSituationConverter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +43,7 @@ public class Reservation {
     private LocalDate reservationDate;
 
     @Column(name = "SITUATION", nullable = false)
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = ReservationSituationConverter.class)
     @Schema(name = "situation", description = "Current situation of the reservation", example = "CONFIRMED")
     private ReservationSituation situation;
 
@@ -57,16 +60,27 @@ public class Reservation {
     @JoinColumn(name = "ID_RESERVATION")
     private List<Traveler> travelers;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ID_PACKAGES_DATES", nullable = false)
-    @Schema(name = "idPackageDate", description = "Travel package date associated with the reservation", example = "123e4567-e89b-12d3-a456-426614174001")
     private PackageDate packageDate;
 
     @Column(name = "CREATED_AT", nullable = false)
     @Schema(name = "createdAt", description = "Timestamp when the reservation was created", example = "2023-10-01T12:00:00")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
     @Column(name = "UPDATED_AT", nullable = false)
-    @Schema(name = "updateAt", description = "Timestamp when the reservation was last updated", example = "2023-10-01T12:00:00")
-    private LocalDateTime updateAt = LocalDateTime.now();
+    @Schema(name = "updatedAt", description = "Timestamp when the reservation was last updated", example = "2023-10-01T12:00:00")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime utcNow = LocalDateTime.now(ZoneOffset.UTC);
+        this.createdAt = utcNow;
+        this.updatedAt = utcNow;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
 }

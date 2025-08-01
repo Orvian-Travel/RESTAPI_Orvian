@@ -6,8 +6,25 @@ spring:
    username: ${DATASOURCE_USERNAME}
    password: ${DATASOURCE_PASSWORD}
    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  mail:
+    host: smtp.ethereal.email
+    port: 587
+    username: ${ETHEREAL_USERNAME:your-ethereal-username}
+    password: ${ETHEREAL_PASSWORD:your-ethereal-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    protocol: smtp
+    test-connection: false
 logging:
   pattern:
     console: '%clr(%d{dd-MM-yyyy HH:mm:ss}){faint} %clr(%5p) %clr([%t]){faint} %clr(%-40.40logger){cyan} %clr(:){yellow} %m%n'
   file:
     name: logs/travelapi.log
+orvian:
+  api:
+    security:
+      secret: ${ORVIAN_API_SECURITY_SECRET}

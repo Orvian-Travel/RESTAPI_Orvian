@@ -2,6 +2,7 @@ package com.orvian.travelapi.domain.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.UUID;
 
@@ -19,6 +20,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -83,4 +86,16 @@ public class Payment {
     @Temporal(TemporalType.TIMESTAMP)
     @Schema(name = "updatedAt", description = "Timestamp when the PAYMENT was last updated", example = "2023-10-01T12:00:00")
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PrePersist
+    protected void onCreate() {
+        LocalDateTime utcNow = LocalDateTime.now(ZoneOffset.UTC);
+        this.createdAt = utcNow;
+        this.updatedAt = utcNow;
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+    }
 }

@@ -2,13 +2,17 @@ package com.orvian.travelapi.service;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+
+import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
 
 public interface UserService extends CrudService<UUID, User> {
-    /*
-     * O método update() atualiza um usuário existente.
-     * Ele valida o usuário antes de salvá-lo no repositório e retorna o usuário
-     * atualizado.
-     * Se o usuário já existir, lança uma DuplicatedRegistryException.
-     */
+    // ✅ Sobrescrever com tipos específicos
+
+    @Override
+    Page<UserSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String name);
+
+    @Override
+    UserSearchResultDTO findById(UUID id);
 }
