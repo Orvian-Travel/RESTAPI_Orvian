@@ -16,4 +16,10 @@ public interface TravelPackageService extends CrudService<UUID, TravelPackage> {
             String title,
             LocalDate startDate,
             Integer maxPeople);
+
+    @Override
+    Page<PackageSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String title);
+
+    @Override
+    PackageSearchResultDTO findById(UUID id);
 }

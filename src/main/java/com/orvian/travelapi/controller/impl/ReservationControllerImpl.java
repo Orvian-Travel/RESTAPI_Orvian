@@ -20,9 +20,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.orvian.travelapi.controller.GenericController;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Reservation;
+import com.orvian.travelapi.service.ReservationService;
 import com.orvian.travelapi.service.exception.AccessDeniedException;
-import com.orvian.travelapi.service.impl.ReservationServiceImpl;
 import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Gerenciamento de Reservas", description = "Endpoints para gerenciamento de reservas")
 public class ReservationControllerImpl implements GenericController {
 
-    private final ReservationServiceImpl reservationService;
+    private final ReservationService reservationService;
 
     private final PagedResourcesAssembler<ReservationSearchResultDTO> pagedResourcesAssembler;
 
@@ -91,6 +92,34 @@ public class ReservationControllerImpl implements GenericController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @GetMapping("/search")
+    @Operation(summary = "Buscar reservas com filtros", description = "Busca reservas com filtros de usuário e status.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Reservas recuperadas com sucesso"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<PagedModel<EntityModel<ReservationSearchResultDTO>>> getReservationsBySearch(
+            @RequestParam(defaultValue = "0") Integer pageNumber,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) UUID userId,
+            @RequestParam(required = false) ReservationSituation status) {
+
+        log.info("DEBUG: Search parameters - pageNumber: {}, pageSize: {}, userId: {}, status: {}",
+                pageNumber, pageSize, userId, status);
+
+        UUID effectiveUserId = authorizationService.getEffectiveUserIdForListing(userId);
+
+        log.info("Fetching reservations for userId: {} with status filter: {}", effectiveUserId, status);
+
+        Page<ReservationSearchResultDTO> page = reservationService.findAllByStatus(
+                pageNumber, pageSize, effectiveUserId, status);
+
+        log.info("DEBUG: Found {} reservations, total pages: {}", page.getTotalElements(), page.getTotalPages());
+
+        PagedModel<EntityModel<ReservationSearchResultDTO>> pagedModel = pagedResourcesAssembler.toModel(page);
+        return ResponseEntity.ok(pagedModel);
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Buscar reserva por ID", description = "Busca uma reserva específica pelo seu ID.")
     @ApiResponses({
@@ -99,7 +128,7 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<ReservationSearchResultDTO> findById(@PathVariable UUID id) {
-        if (!authorizationService.canAccessResource(id, "reservation")) {
+        if (!authorizationService.canAccessReservation(id)) {
             throw new AccessDeniedException("Você só pode visualizar suas próprias reservas");
         }
 

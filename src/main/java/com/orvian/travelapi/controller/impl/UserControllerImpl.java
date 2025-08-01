@@ -24,8 +24,8 @@ import com.orvian.travelapi.controller.dto.user.CreateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UpdateUserDTO;
 import com.orvian.travelapi.controller.dto.user.UserSearchResultDTO;
 import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.service.UserService;
 import com.orvian.travelapi.service.exception.AccessDeniedException;
-import com.orvian.travelapi.service.impl.UserServiceImpl;
 import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Gerenciamento de Usuário", description = "Operações relacionadas ao gerenciamnento de usuário")
 public class UserControllerImpl implements GenericController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     private final PagedResourcesAssembler<UserSearchResultDTO> pagedResourcesAssembler;
 

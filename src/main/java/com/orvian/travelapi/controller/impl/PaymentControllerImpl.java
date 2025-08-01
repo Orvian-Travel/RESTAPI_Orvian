@@ -20,8 +20,8 @@ import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
 import com.orvian.travelapi.controller.dto.payment.UpdatePaymentDTO;
 import com.orvian.travelapi.domain.model.Payment;
+import com.orvian.travelapi.service.PaymentService;
 import com.orvian.travelapi.service.exception.AccessDeniedException;
-import com.orvian.travelapi.service.impl.PaymentServiceImpl;
 import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Pagamento", description = "Operações relacionadas ao gerenciamento de pagamentos")
 public class PaymentControllerImpl implements GenericController {
 
-    private final PaymentServiceImpl paymentService;
+    private final PaymentService paymentService;
 
     private final OrvianAuthorizationService authorizationService;
 

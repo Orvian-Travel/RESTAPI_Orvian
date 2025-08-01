@@ -26,7 +26,7 @@ import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
 import com.orvian.travelapi.domain.model.TravelPackage;
-import com.orvian.travelapi.service.impl.PackageServiceImpl;
+import com.orvian.travelapi.service.TravelPackageService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Gerenciamento de Pacotes", description = "Endpoints para gerenciamento de pacotes de viagem")
 public class TravelPackageControllerImpl implements GenericController {
 
-    private final PackageServiceImpl packageService;
+    private final TravelPackageService packageService;
 
     private final PagedResourcesAssembler<PackageSearchResultDTO> pagedResourcesAssembler;
 

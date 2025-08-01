@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
@@ -69,6 +70,29 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Page<ReservationSearchResultDTO> findAllByStatus(Integer pageNumber, Integer pageSize,
+            UUID userId, ReservationSituation status) {
+        try {
+            log.info("Retrieving reservations for user ID: {} with status: {}", userId, status);
+
+            // ✅ Usar specification combinada
+            Specification<Reservation> spec = ReservationSpecs.userIdAndSituation(userId, status);
+
+            Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
+
+            return reservationRepository
+                    .findAll(spec, pageRequest)
+                    .map(reservation -> {
+                        Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
+                        return reservationMapper.toDTO(reservation, payment);
+                    });
+        } catch (Exception e) {
+            log.error("Erro ao buscar reservas por status: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar reservas por status: " + e.getMessage());
         }
     }
 

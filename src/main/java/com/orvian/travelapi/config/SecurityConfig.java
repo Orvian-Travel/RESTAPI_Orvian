@@ -52,10 +52,9 @@ public class SecurityConfig {
                 // ===== VISUALIZAÇÕES - ADMIN E ATENDENTE =====
                 // Listagem de usuários - ADMIN e ATENDENTE podem visualizar
                 .requestMatchers(HttpMethod.GET, "/api/v1/users").hasAnyRole("ADMIN", "ATENDENTE")
-                .requestMatchers(HttpMethod.GET, "/api/v1/users/{id}").hasAnyRole("ADMIN", "ATENDENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/users/{id}").authenticated()
                 // Visualização de reservas de outros - ADMIN e ATENDENTE
-                .requestMatchers(HttpMethod.GET, "/api/v1/reservations").hasAnyRole("ADMIN", "ATENDENTE")
-                .requestMatchers(HttpMethod.GET, "/api/v1/reservations/{id}").hasAnyRole("ADMIN", "ATENDENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservations/**").authenticated()
                 // Visualização de pagamentos de outros - ADMIN e ATENDENTE
                 .requestMatchers(HttpMethod.GET, "/api/v1/payments").hasAnyRole("ADMIN", "ATENDENTE")
                 .requestMatchers(HttpMethod.GET, "/api/v1/payments/{id}").hasAnyRole("ADMIN", "ATENDENTE")
