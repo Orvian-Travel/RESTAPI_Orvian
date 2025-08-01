@@ -2,7 +2,6 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
 name: Build and deploy JAR app to Azure Web App - orvian-travel-api
-run: mvn clean install -Dmaven.test.skip=true
 
 on:
   push:
@@ -26,7 +25,7 @@ jobs:
           distribution: 'microsoft'
 
       - name: Build with Maven
-        run: mvn clean install
+        run: mvn clean install -Dmaven.test.skip=true
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -50,9 +49,9 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ED527ABDCEDC4286ACFCD4F65C06E134 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_EDA7A7F75DBC4A32AB42A02A4B1A575B }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A9F1AD209F9F4D0BA3764D76E101A2C7 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E123456789 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_E123456789 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E123456789 }}
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
@@ -61,5 +60,3 @@ jobs:
           app-name: 'orvian-travel-api'
           slot-name: 'Production'
           package: '*.jar'
-
-          
