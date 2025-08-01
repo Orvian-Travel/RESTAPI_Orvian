@@ -2,7 +2,6 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
 name: Build and deploy JAR app to Azure Web App - orvian-travel-api
-run: mvn clean install -Dmaven.test.skip=true
 
 on:
   push:
