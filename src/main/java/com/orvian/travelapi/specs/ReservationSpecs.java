@@ -1,5 +1,6 @@
 package com.orvian.travelapi.specs;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -25,6 +26,11 @@ public class ReservationSpecs {
                 -> situation == null ? null : criteriaBuilder.equal(root.get("situation"), situation);
     }
 
+    public static Specification<Reservation> reservationDateEquals(LocalDate reservationDate) {
+        return (root, query, criteriaBuilder)
+                -> reservationDate == null ? null : criteriaBuilder.equal(root.get("reservationDate"), reservationDate);
+    }
+
     public static Specification<Reservation> userIdAndSituation(UUID userId, ReservationSituation situation) {
         return (root, query, criteriaBuilder) -> {
             var predicates = new ArrayList<Predicate>();
@@ -36,6 +42,34 @@ public class ReservationSpecs {
             if (situation != null) {
                 predicates.add(criteriaBuilder.equal(root.get("situation"), situation));
             }
+            if (predicates.isEmpty()) {
+                return null;
+            }
+
+            return criteriaBuilder.and(predicates.toArray(Predicate[]::new));
+        };
+    }
+
+    public static Specification<Reservation> userIdAndSituationAndReservationDate(
+            UUID userId,
+            ReservationSituation situation,
+            LocalDate reservationDate) {
+        return (root, query, criteriaBuilder) -> {
+            var predicates = new ArrayList<Predicate>();
+
+            if (userId != null) {
+                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
+            }
+
+            if (situation != null) {
+                predicates.add(criteriaBuilder.equal(root.get("situation"), situation));
+            }
+
+            // ✅ NOVO: Filtro por data de reserva
+            if (reservationDate != null) {
+                predicates.add(criteriaBuilder.equal(root.get("reservationDate"), reservationDate));
+            }
+
             if (predicates.isEmpty()) {
                 return null;
             }
