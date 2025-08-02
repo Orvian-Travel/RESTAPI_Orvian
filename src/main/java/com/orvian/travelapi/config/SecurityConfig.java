@@ -10,16 +10,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.orvian.travelapi.service.security.SecurityFilter;
 
 import lombok.RequiredArgsConstructor;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,48 +22,12 @@ import java.util.List;
 public class SecurityConfig {
 
     private final SecurityFilter securityFilter;
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-
-        // URLs específicas permitidas
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:4200",
-            "https://localhost:4200",
-            "https://orvian-travel.azurewebsites.net",
-            "https://orvian-travel-api.azurewebsites.net"
-        ));
-
-        // Métodos permitidos
-        configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"
-        ));
-
-        // Headers permitidos
-        configuration.setAllowedHeaders(List.of("*"));
-
-        // Permite credenciais
-        configuration.setAllowCredentials(true);
-
-        // Headers expostos
-        configuration.setExposedHeaders(Arrays.asList(
-            "Authorization", "Content-Disposition", "Content-Type"
-        ));
-
-        // Tempo de cache do preflight
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     protected SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
