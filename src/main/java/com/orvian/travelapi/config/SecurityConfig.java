@@ -32,8 +32,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Permite todas as origens
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        // URLs específicas permitidas
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "http://localhost:4200",
+            "https://localhost:4200",
+            "https://orvian-travel.azurewebsites.net",
+            "https://orvian-travel-api.azurewebsites.net"
+        ));
 
         // Métodos permitidos
         configuration.setAllowedMethods(Arrays.asList(
@@ -47,7 +52,9 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
 
         // Headers expostos
-        configuration.setExposedHeaders(List.of("*"));
+        configuration.setExposedHeaders(Arrays.asList(
+            "Authorization", "Content-Disposition", "Content-Type"
+        ));
 
         // Tempo de cache do preflight
         configuration.setMaxAge(3600L);
