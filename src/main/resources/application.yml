@@ -28,3 +28,6 @@ orvian:
   api:
     security:
       secret: ${ORVIAN_API_SECURITY_SECRET}
+server:
+  forward-headers-strategy: native
+  use-forward-headers: true
