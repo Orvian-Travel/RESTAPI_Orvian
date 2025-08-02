@@ -22,13 +22,14 @@ public class Media {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "CONTENT64", nullable = false)
-    private String content64;
+    @Lob
+    @Column(name = "CONTENT64", nullable = false, columnDefinition = "VARBINARY(MAX)")
+    private byte[] content64;
 
     @Column(name = "TYPE", nullable = false, length = 10)
     private String type;
 
     @ManyToOne
-    @JoinColumn(name = "TRAVEL_PACKAGE_ID", nullable = false)
+    @JoinColumn(name = "PACKAGE_ID", nullable = false)
     private TravelPackage travelPackage;
 }

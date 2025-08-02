@@ -10,6 +10,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.orvian.travelapi.domain.model.Media;
+import com.orvian.travelapi.domain.repository.MediaRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +48,7 @@ public class PackageServiceImpl implements TravelPackageService {
     private final TravelPackageRepository travelPackageRepository;
     private final TravelPackageMapper travelPackageMapper;
     private final PackageDateRepository packageDateRepository;
+    private final MediaRepository mediaRepository;
 
     @Override
     public Page<PackageSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String title) {
@@ -102,6 +106,7 @@ public class PackageServiceImpl implements TravelPackageService {
     }
 
     @Override
+    @Transactional
     public TravelPackage create(Record dto) {
         try {
             CreateTravelPackageDTO dtoTravelPackage = (CreateTravelPackageDTO) dto;
@@ -109,6 +114,7 @@ public class PackageServiceImpl implements TravelPackageService {
 
             TravelPackage travelPackage = travelPackageMapper.toTravelPackage(dtoTravelPackage);
             validateCreationAndUpdate(travelPackage);
+
             TravelPackage savedPackage = travelPackageRepository.save(travelPackage);
 
             List<PackageDate> packageDates = travelPackageMapper.createPackageDatesForPackage(
@@ -119,6 +125,16 @@ public class PackageServiceImpl implements TravelPackageService {
             if (!packageDates.isEmpty()) {
                 packageDateRepository.saveAll(packageDates);
                 log.info("Created {} package dates for travel package: {}", packageDates.size(), savedPackage.getId());
+            }
+
+            if (dtoTravelPackage.medias() != null && !dtoTravelPackage.medias().isEmpty()){
+                List<Media> medias = travelPackageMapper.createMediasForPackage(
+                        dtoTravelPackage.medias(),
+                        savedPackage
+                );
+
+                mediaRepository.saveAll(medias);
+                log.info("Created {} medias for travel package: {}", medias.size(), savedPackage.getId());
             }
 
             return savedPackage;
