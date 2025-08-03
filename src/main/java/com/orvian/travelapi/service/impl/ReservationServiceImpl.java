@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
 import static java.util.Optional.ofNullable;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,10 +20,12 @@ import com.orvian.travelapi.controller.dto.reservation.ReservationDateDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
 import com.orvian.travelapi.domain.enums.ReservationSituation;
+import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
 import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.domain.repository.MediaRepository;
 import com.orvian.travelapi.domain.repository.PackageDateRepository;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.domain.repository.ReservationRepository;
@@ -53,22 +54,27 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationMapper reservationMapper;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final MediaRepository mediaRepository;
 
     @Override
     public Page<ReservationSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, UUID userID) {
         try {
             log.info("Retrieving all reservations for user ID: {}", userID);
 
-            // ✅ IMPORTANTE: Se userID for null, spec deve ser null (sem filtro)
             Specification<Reservation> spec = (userID != null) ? ReservationSpecs.userIdEquals(userID) : null;
-
             Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
 
             return reservationRepository
-                    .findAll(spec, pageRequest) // ✅ spec=null significa "todas as reservas"
+                    .findAll(spec, pageRequest)
                     .map(reservation -> {
                         Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
-                        return reservationMapper.toDTO(reservation, payment);
+
+                        // ✅ NOVA LÓGICA: Buscar primeira mídia do pacote associado
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(
+                                reservation.getPackageDate().getTravelPackage().getId()
+                        );
+
+                        return reservationMapper.toDTOWithFirstMedia(reservation, payment, firstMedia.orElse(null));
                     });
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
@@ -83,7 +89,6 @@ public class ReservationServiceImpl implements ReservationService {
             log.info("Retrieving reservations for user ID: {} with status: {} and reservationDate: {}",
                     userId, status, reservationDate);
 
-            // ✅ USAR SPECIFICATION ATUALIZADA: Com filtro de data
             Specification<Reservation> spec = ReservationSpecs.userIdAndSituationAndReservationDate(
                     userId, status, reservationDate);
 
@@ -93,7 +98,13 @@ public class ReservationServiceImpl implements ReservationService {
                     .findAll(spec, pageRequest)
                     .map(reservation -> {
                         Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
-                        return reservationMapper.toDTO(reservation, payment);
+
+                        // ✅ NOVA LÓGICA: Buscar primeira mídia do pacote associado
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(
+                                reservation.getPackageDate().getTravelPackage().getId()
+                        );
+
+                        return reservationMapper.toDTOWithFirstMedia(reservation, payment, firstMedia.orElse(null));
                     });
         } catch (Exception e) {
             log.error("Erro ao buscar reservas por status e data: {}", e.getMessage(), e);

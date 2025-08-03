@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.orvian.travelapi.controller.dto.media.SearchMediaDTO;
 import com.orvian.travelapi.controller.dto.packagedate.SearchPackageDateDTO;
 import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.payment.PaymentSearchResultDTO;
@@ -15,6 +16,7 @@ import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
 import com.orvian.travelapi.controller.dto.traveler.CreateTravelerDTO;
+import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
@@ -50,4 +52,24 @@ public interface ReservationMapper {
     @Mapping(target = "packageDestination", source = "travelPackage.destination")
     @Mapping(target = "packageDuration", source = "travelPackage.duration")
     SearchPackageDateDTO toDTO(PackageDate packageDate);
+
+    @Mapping(target = "id", source = "reservation.id")
+    @Mapping(target = "createdAt", source = "reservation.createdAt")
+    @Mapping(target = "updatedAt", source = "reservation.updatedAt")
+    @Mapping(target = "payment", source = "payment")
+    @Mapping(target = "packageDate", source = "reservation.packageDate")
+    @Mapping(target = "firstMedia", expression = "java(toSearchMediaDTO(firstMedia))")
+    ReservationSearchResultDTO toDTOWithFirstMedia(Reservation reservation, Payment payment, Media firstMedia);
+
+    // ✅ Método auxiliar para conversão de mídia
+    default SearchMediaDTO toSearchMediaDTO(Media media) {
+        if (media == null) {
+            return null;
+        }
+        return new SearchMediaDTO(
+                media.getId(),
+                media.getType(),
+                java.util.Base64.getEncoder().encodeToString(media.getContent64())
+        );
+    }
 }

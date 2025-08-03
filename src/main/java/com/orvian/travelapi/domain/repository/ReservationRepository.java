@@ -39,4 +39,5 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
         ORDER BY r.reservationDate DESC
         """)
     List<LocalDate> findAllDistinctReservationDates();
+
 }

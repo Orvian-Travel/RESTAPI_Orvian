@@ -25,8 +25,10 @@ import com.orvian.travelapi.controller.dto.packagedate.UpdatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
+import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.TravelPackage;
+import com.orvian.travelapi.domain.repository.MediaRepository;
 import com.orvian.travelapi.domain.repository.PackageDateRepository;
 import com.orvian.travelapi.domain.repository.TravelPackageRepository;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
@@ -38,6 +40,7 @@ import static com.orvian.travelapi.specs.TravelPackageSpecs.hasStartDateFrom;
 import static com.orvian.travelapi.specs.TravelPackageSpecs.maxPeopleGreaterThanOrEqual;
 import static com.orvian.travelapi.specs.TravelPackageSpecs.titleLike;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,14 +64,16 @@ public class PackageServiceImpl implements TravelPackageService {
             return travelPackageRepository
                     .findAll(spec, pageRequest)
                     .map(pkg -> {
-
                         List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
 
-                        return travelPackageMapper.toDTOWithDates(pkg, dates);
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(pkg.getId());
+                        List<Media> mediaList = firstMedia.map(List::of).orElse(List.of());
+
+                        return travelPackageMapper.toDTOWithDatesAndFirstMedia(pkg, dates, mediaList);
                     });
         } catch (Exception e) {
-            log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao buscar reservas: " + e.getMessage());
+            log.error("Erro ao buscar pacotes: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar pacotes: " + e.getMessage());
         }
     }
 
@@ -97,7 +102,11 @@ public class PackageServiceImpl implements TravelPackageService {
                     .findAll(spec, pageRequest)
                     .map(pkg -> {
                         List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(pkg.getId());
-                        return travelPackageMapper.toDTOWithDates(pkg, dates);
+
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(pkg.getId());
+                        List<Media> mediaList = firstMedia.map(List::of).orElse(List.of());
+
+                        return travelPackageMapper.toDTOWithDatesAndFirstMedia(pkg, dates, mediaList);
                     });
 
         } catch (Exception e) {
@@ -108,7 +117,7 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     @Transactional
-    public List<PaymentByPackageDTO> packagesSalesTotal(){
+    public List<PaymentByPackageDTO> packagesSalesTotal() {
         return travelPackageRepository.sumTotalByPackage();
     }
 
@@ -134,7 +143,7 @@ public class PackageServiceImpl implements TravelPackageService {
                 log.info("Created {} package dates for travel package: {}", packageDates.size(), savedPackage.getId());
             }
 
-            if (dtoTravelPackage.medias() != null && !dtoTravelPackage.medias().isEmpty()){
+            if (dtoTravelPackage.medias() != null && !dtoTravelPackage.medias().isEmpty()) {
                 List<Media> medias = travelPackageMapper.createMediasForPackage(
                         dtoTravelPackage.medias(),
                         savedPackage
@@ -161,11 +170,11 @@ public class PackageServiceImpl implements TravelPackageService {
                 .orElseThrow(() -> new NotFoundException("Travel package with ID " + id + " not found."));
         log.info("Travel package found with ID: {}", id);
 
-        // Busca as datas desse pacote
         List<PackageDate> dates = packageDateRepository.findByTravelPackage_Id(travelPackage.getId());
 
-        // Monte o DTO, passando as datas
-        return travelPackageMapper.toDTOWithDates(travelPackage, dates);
+        List<Media> medias = mediaRepository.findByTravelPackage_IdOrderByCreatedAtAsc(travelPackage.getId());
+
+        return travelPackageMapper.toDTOWithDatesAndMedias(travelPackage, dates, medias);
     }
 
     @Override

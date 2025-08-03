@@ -1,24 +1,25 @@
 package com.orvian.travelapi.mapper;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.orvian.travelapi.controller.dto.media.CreateMediaDTO;
 import com.orvian.travelapi.controller.dto.media.SearchMediaDTO;
-import com.orvian.travelapi.domain.model.Media;
-import org.mapstruct.*;
-
 import com.orvian.travelapi.controller.dto.packagedate.CreatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.packagedate.SearchPackageDateDTO;
 import com.orvian.travelapi.controller.dto.packagedate.UpdatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
+import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.TravelPackage;
 
@@ -110,34 +111,33 @@ public interface TravelPackageMapper {
     }
 
     default List<SearchMediaDTO> toSearchMediaDTOList(List<Media> medias) {
-        if (medias == null) return List.of();
+        if (medias == null) {
+            return List.of();
+        }
         return medias.stream()
                 .map(media -> new SearchMediaDTO(
-                        media.getId(),
-                        media.getType(),
-                        java.util.Base64.getEncoder().encodeToString(media.getContent64())
-                ))
+                media.getId(),
+                media.getType(),
+                java.util.Base64.getEncoder().encodeToString(media.getContent64())
+        ))
                 .toList();
     }
 
-    default PackageSearchResultDTO toDTOWithDates(TravelPackage entity, List<PackageDate> packageDates) {
-        List<SearchPackageDateDTO> dateDTOs = packageDates == null ? List.of() :
-                packageDates.stream().map(this::toDTO).toList();
+    @Mapping(target = "packageDates", source = "packageDates")
+    @Mapping(target = "medias", source = "travelPackage.media")
+    PackageSearchResultDTO toDTOWithDates(TravelPackage travelPackage, List<PackageDate> packageDates);
 
-        List<SearchMediaDTO> mediaDTOs = toSearchMediaDTOList(entity.getMedia());
+    @Mapping(target = "packageDates", source = "packageDates")
+    @Mapping(target = "medias", source = "firstMediaList")
+    PackageSearchResultDTO toDTOWithDatesAndFirstMedia(
+            TravelPackage travelPackage,
+            List<PackageDate> packageDates,
+            List<Media> firstMediaList);
 
-        return new PackageSearchResultDTO(
-                entity.getId(),
-                entity.getTitle(),
-                entity.getDescription(),
-                entity.getDestination(),
-                entity.getDuration(),
-                entity.getPrice(),
-                entity.getMaxPeople(),
-                dateDTOs,
-                mediaDTOs,
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
-        );
-    }
+    @Mapping(target = "packageDates", source = "packageDates")
+    @Mapping(target = "medias", source = "medias")
+    PackageSearchResultDTO toDTOWithDatesAndMedias(
+            TravelPackage travelPackage,
+            List<PackageDate> packageDates,
+            List<Media> medias);
 }
