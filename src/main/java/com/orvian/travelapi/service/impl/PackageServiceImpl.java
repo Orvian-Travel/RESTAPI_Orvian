@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.orvian.travelapi.controller.dto.travelpackage.PaymentByPackageDTO;
 import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.repository.MediaRepository;
 import jakarta.transaction.Transactional;
@@ -103,6 +104,12 @@ public class PackageServiceImpl implements TravelPackageService {
             log.error("Erro ao buscar pacotes: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar pacotes: " + e.getMessage());
         }
+    }
+
+    @Override
+    @Transactional
+    public List<PaymentByPackageDTO> packagesSalesTotal(){
+        return travelPackageRepository.sumTotalByPackage();
     }
 
     @Override

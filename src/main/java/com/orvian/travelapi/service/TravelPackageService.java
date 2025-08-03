@@ -1,8 +1,10 @@
 package com.orvian.travelapi.service;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
+import com.orvian.travelapi.controller.dto.travelpackage.PaymentByPackageDTO;
 import org.springframework.data.domain.Page;
 
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
@@ -22,4 +24,6 @@ public interface TravelPackageService extends CrudService<UUID, TravelPackage> {
 
     @Override
     PackageSearchResultDTO findById(UUID id);
+
+    List<PaymentByPackageDTO> packagesSalesTotal();
 }
