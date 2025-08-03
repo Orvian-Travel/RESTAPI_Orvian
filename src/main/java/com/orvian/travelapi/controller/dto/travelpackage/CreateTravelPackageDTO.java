@@ -3,6 +3,7 @@ package com.orvian.travelapi.controller.dto.travelpackage;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.orvian.travelapi.controller.dto.media.CreateMediaDTO;
 import com.orvian.travelapi.controller.dto.packagedate.CreatePackageDateDTO;
 
 import jakarta.validation.Valid;
@@ -26,7 +27,9 @@ public record CreateTravelPackageDTO(
         @Min(value = 1, message = "Max people must be at least 1")
         int maxPeople,
         @Valid
-        List<CreatePackageDateDTO> packageDates
+        List<CreatePackageDateDTO> packageDates,
+        @Valid
+        List<CreateMediaDTO> medias
         ) {
 
 }
