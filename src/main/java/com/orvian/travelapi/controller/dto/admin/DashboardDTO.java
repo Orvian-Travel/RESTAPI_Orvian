@@ -6,6 +6,7 @@ import java.util.List;
 
 public record DashboardDTO(
         Integer newUsers,
+        Integer newPackages,
         WeekRatingDTO weekRating,
         List<PaymentByPackageDTO> salesByPackage
 ) {

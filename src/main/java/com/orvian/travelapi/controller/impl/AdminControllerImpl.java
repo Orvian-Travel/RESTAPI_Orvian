@@ -23,11 +23,12 @@ public class AdminControllerImpl {
     private final TravelPackageRepository packageRepository;
     private final UserRepository userRepository;
     private final RatingRepository ratingRepository;
-    
+
     @GetMapping("/dashboard-week")
     public ResponseEntity<DashboardDTO> dashboardWeek(){
         DashboardDTO dashboard = new DashboardDTO(
                 userRepository.newUserThisWeek(),
+                packageRepository.newPackageThisWeek(),
                 ratingRepository.ratingAVGThisWeek(),
                 packageRepository.sumTotalByPackage()
         );
