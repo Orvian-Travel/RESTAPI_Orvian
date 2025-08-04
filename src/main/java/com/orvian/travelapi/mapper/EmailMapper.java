@@ -32,7 +32,7 @@ public interface EmailMapper {
     @Mapping(target = "tripEndDate", source = "reservation.packageDate.endDate")
     @Mapping(target = "totalAmountPaid", source = "valuePaid")
     @Mapping(target = "paymentMethod", source = "paymentMethod", qualifiedByName = "paymentMethodToString")
-    @Mapping(target = "paymentApprovedAt", expression = "java(getCurrentTimestamp())")
+    @Mapping(target = "paymentApprovedAt", source = "paymentApprovedAt")
     @Mapping(target = "totalTravelers", source = "reservation", qualifiedByName = "calculateTotalTravelers")
     EmailConfirmationDTO toEmailConfirmationDTO(Payment payment);
 

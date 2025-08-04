@@ -13,4 +13,8 @@ public interface PaymentService extends CrudService<UUID, Payment> {
 
     @Override
     PaymentSearchResultDTO findById(UUID id);
+
+    void sendPaymentConfirmationEmailById(UUID paymentId);
+
+    void sendPaymentConfirmationEmailPublic(Payment payment);
 }

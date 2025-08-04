@@ -1,6 +1,7 @@
 package com.orvian.travelapi.service.impl;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,10 +16,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.orvian.travelapi.controller.dto.payment.CreatePaymentDTO;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationDateDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
+import com.orvian.travelapi.domain.enums.PaymentStatus;
 import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
@@ -32,6 +35,7 @@ import com.orvian.travelapi.domain.repository.ReservationRepository;
 import com.orvian.travelapi.domain.repository.UserRepository;
 import com.orvian.travelapi.mapper.PaymentMapper;
 import com.orvian.travelapi.mapper.ReservationMapper;
+import com.orvian.travelapi.service.PaymentService;
 import com.orvian.travelapi.service.ReservationService;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
@@ -55,6 +59,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final MediaRepository mediaRepository;
+    private final PaymentService paymentService;
 
     @Override
     public Page<ReservationSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, UUID userID) {
@@ -144,10 +149,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservationRepository.flush();
 
             if (dtoReservation.payment() != null) {
-                Payment payment = paymentMapper.toEntity(dtoReservation.payment());
-                payment.setReservation(savedReservation); // associa a reserva ao pagamento
-                paymentRepository.save(payment);
-                paymentRepository.flush();
+                processReservationPayment(dtoReservation.payment(), savedReservation);
             }
 
             return savedReservation;
@@ -271,6 +273,34 @@ public class ReservationServiceImpl implements ReservationService {
         } catch (Exception e) {
             log.error("Error checking reservation ownership: {}", e.getMessage());
             return false;
+        }
+    }
+
+    private void processReservationPayment(CreatePaymentDTO paymentDTO, Reservation savedReservation) {
+        try {
+            log.info("Processing payment for reservation: {}", savedReservation.getId());
+
+            Payment payment = paymentMapper.toEntity(paymentDTO);
+            payment.setReservation(savedReservation);
+
+            if (PaymentStatus.APROVADO.equals(payment.getStatus())) {
+                payment.setPaymentApprovedAt(new Date());
+                log.info("Payment approved, setting paymentApprovedAt for reservation: {}", savedReservation.getId());
+            }
+
+            Payment savedPayment = paymentRepository.save(payment);
+            paymentRepository.flush();
+
+            if (PaymentStatus.APROVADO.equals(savedPayment.getStatus())) {
+                log.info("Sending payment confirmation email for reservation: {}", savedReservation.getId());
+                paymentService.sendPaymentConfirmationEmailPublic(savedPayment);
+            }
+
+            log.info("Payment processed successfully for reservation: {}", savedReservation.getId());
+
+        } catch (Exception e) {
+            log.error("Error processing payment for reservation {}: {}", savedReservation.getId(), e.getMessage(), e);
+            throw new RuntimeException("Failed to process payment for reservation: " + e.getMessage());
         }
     }
 

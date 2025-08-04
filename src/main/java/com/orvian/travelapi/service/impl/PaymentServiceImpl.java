@@ -1,5 +1,7 @@
 package com.orvian.travelapi.service.impl;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -141,6 +143,25 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Erro ao processar envio de email para pagamento {}: {}",
                     payment.getId(), e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void sendPaymentConfirmationEmailPublic(Payment payment) {
+        sendPaymentConfirmationEmail(payment);
+    }
+
+    @Override
+    public void sendPaymentConfirmationEmailById(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new NotFoundException("Payment not found with ID: " + paymentId));
+
+        if (payment.getPaymentApprovedAt() == null) {
+            payment.setPaymentApprovedAt(Timestamp.from(Instant.now()));
+            paymentRepository.save(payment);
+            log.info("Set paymentApprovedAt for payment: {}", paymentId);
+        }
+
+        sendPaymentConfirmationEmail(payment);
     }
 
 }
