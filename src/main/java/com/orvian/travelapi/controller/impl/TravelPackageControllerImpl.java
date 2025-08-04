@@ -117,11 +117,6 @@ public class TravelPackageControllerImpl implements GenericController {
         return ResponseEntity.ok(packageService.findById(id));
     }
 
-    @GetMapping("/sumbypackage")
-    public ResponseEntity<List<PaymentByPackageDTO>> getSumTotalByPackage(){
-        return ResponseEntity.ok(packageService.packagesSalesTotal());
-    }
-
     @PutMapping("/{id}")
     @Operation(summary = "Atualizar um pacote de viagem", description = "Atualiza os detalhes de um pacote de viagem existente identificado pelo seu ID.")
     @ApiResponses({

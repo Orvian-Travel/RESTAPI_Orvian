@@ -25,5 +25,4 @@ public interface TravelPackageService extends CrudService<UUID, TravelPackage> {
     @Override
     PackageSearchResultDTO findById(UUID id);
 
-    List<PaymentByPackageDTO> packagesSalesTotal();
 }
