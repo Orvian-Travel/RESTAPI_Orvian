@@ -24,7 +24,7 @@ public class PasswordResetService {
         resetToken.setToken(UUID.randomUUID().toString());
         resetToken.setUserEmail(email);
         tokenRepository.save(resetToken);
-        String resetLink = "http://localhost:4200/reset-password/" + resetToken.getToken();
+        String resetLink = "https://orvian-travel.azurewebsites.net/reset-password/" + resetToken.getToken();
 
         emailNotificationService.sendPasswordResetEmail(email, resetLink);
     }
