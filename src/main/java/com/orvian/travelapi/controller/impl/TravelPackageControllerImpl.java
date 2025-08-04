@@ -3,8 +3,10 @@ package com.orvian.travelapi.controller.impl;
 import java.net.URI;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.UUID;
 
+import com.orvian.travelapi.controller.dto.travelpackage.PaymentByPackageDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
@@ -113,6 +115,11 @@ public class TravelPackageControllerImpl implements GenericController {
     })
     public ResponseEntity<PackageSearchResultDTO> getPackageById(@PathVariable UUID id) {
         return ResponseEntity.ok(packageService.findById(id));
+    }
+
+    @GetMapping("/sumbypackage")
+    public ResponseEntity<List<PaymentByPackageDTO>> getSumTotalByPackage(){
+        return ResponseEntity.ok(packageService.packagesSalesTotal());
     }
 
     @PutMapping("/{id}")

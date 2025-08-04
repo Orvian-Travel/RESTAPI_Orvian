@@ -1,5 +1,6 @@
 package com.orvian.travelapi.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,13 +16,16 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
+import com.orvian.travelapi.controller.dto.reservation.ReservationDateDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.controller.dto.reservation.UpdateReservationDTO;
 import com.orvian.travelapi.domain.enums.ReservationSituation;
+import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.Payment;
 import com.orvian.travelapi.domain.model.Reservation;
 import com.orvian.travelapi.domain.model.User;
+import com.orvian.travelapi.domain.repository.MediaRepository;
 import com.orvian.travelapi.domain.repository.PackageDateRepository;
 import com.orvian.travelapi.domain.repository.PaymentRepository;
 import com.orvian.travelapi.domain.repository.ReservationRepository;
@@ -50,22 +54,27 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationMapper reservationMapper;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
+    private final MediaRepository mediaRepository;
 
     @Override
     public Page<ReservationSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, UUID userID) {
         try {
             log.info("Retrieving all reservations for user ID: {}", userID);
 
-            // ✅ IMPORTANTE: Se userID for null, spec deve ser null (sem filtro)
             Specification<Reservation> spec = (userID != null) ? ReservationSpecs.userIdEquals(userID) : null;
-
             Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
 
             return reservationRepository
-                    .findAll(spec, pageRequest) // ✅ spec=null significa "todas as reservas"
+                    .findAll(spec, pageRequest)
                     .map(reservation -> {
                         Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
-                        return reservationMapper.toDTO(reservation, payment);
+
+                        // ✅ NOVA LÓGICA: Buscar primeira mídia do pacote associado
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(
+                                reservation.getPackageDate().getTravelPackage().getId()
+                        );
+
+                        return reservationMapper.toDTOWithFirstMedia(reservation, payment, firstMedia.orElse(null));
                     });
         } catch (Exception e) {
             log.error("Erro ao buscar reservas: {}", e.getMessage(), e);
@@ -74,13 +83,14 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public Page<ReservationSearchResultDTO> findAllByStatus(Integer pageNumber, Integer pageSize,
-            UUID userId, ReservationSituation status) {
+    public Page<ReservationSearchResultDTO> findAllByStatusAndDate(Integer pageNumber, Integer pageSize,
+            UUID userId, ReservationSituation status, LocalDate reservationDate) {
         try {
-            log.info("Retrieving reservations for user ID: {} with status: {}", userId, status);
+            log.info("Retrieving reservations for user ID: {} with status: {} and reservationDate: {}",
+                    userId, status, reservationDate);
 
-            // ✅ Usar specification combinada
-            Specification<Reservation> spec = ReservationSpecs.userIdAndSituation(userId, status);
+            Specification<Reservation> spec = ReservationSpecs.userIdAndSituationAndReservationDate(
+                    userId, status, reservationDate);
 
             Pageable pageRequest = PageRequest.of(pageNumber, pageSize, Sort.by("createdAt").descending());
 
@@ -88,11 +98,17 @@ public class ReservationServiceImpl implements ReservationService {
                     .findAll(spec, pageRequest)
                     .map(reservation -> {
                         Payment payment = paymentRepository.findByReservation_Id(reservation.getId()).orElse(null);
-                        return reservationMapper.toDTO(reservation, payment);
+
+                        // ✅ NOVA LÓGICA: Buscar primeira mídia do pacote associado
+                        Optional<Media> firstMedia = mediaRepository.findFirstByTravelPackage_IdOrderByCreatedAtAsc(
+                                reservation.getPackageDate().getTravelPackage().getId()
+                        );
+
+                        return reservationMapper.toDTOWithFirstMedia(reservation, payment, firstMedia.orElse(null));
                     });
         } catch (Exception e) {
-            log.error("Erro ao buscar reservas por status: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao buscar reservas por status: " + e.getMessage());
+            log.error("Erro ao buscar reservas por status e data: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar reservas por status e data: " + e.getMessage());
         }
     }
 
@@ -186,12 +202,58 @@ public class ReservationServiceImpl implements ReservationService {
         if (id == null) {
             throw new IllegalArgumentException("ID cannot be null");
         }
-        reservationRepository.findById(id)
-                .map(reservation -> {
-                    reservationRepository.delete(reservation);
-                    return reservation;
-                })
-                .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + id));
+
+        try {
+            Reservation reservation = reservationRepository.findById(id)
+                    .orElseThrow(() -> new NotFoundException("Reservation not found with ID: " + id));
+
+            if (ReservationSituation.CANCELADA.equals(reservation.getSituation())) {
+                log.warn("Reservation {} is already cancelled", id);
+                throw new IllegalStateException("Reservation is already cancelled");
+            }
+
+            reservation.setSituation(ReservationSituation.CANCELADA);
+
+            Reservation cancelledReservation = reservationRepository.save(reservation);
+
+            log.info("Reservation {} successfully cancelled (soft delete). Status changed to CANCELADA",
+                    cancelledReservation.getId());
+
+        } catch (NotFoundException | IllegalStateException e) {
+            // Re-throw exceptions específicas
+            throw e;
+        } catch (Exception e) {
+            log.error("Error cancelling reservation {}: {}", id, e.getMessage(), e);
+            throw new RuntimeException("Error cancelling reservation: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public List<ReservationDateDTO> findAvailableReservationDates(UUID userId) {
+        try {
+            log.info("Finding available reservation dates for user ID: {}", userId);
+
+            List<LocalDate> results;
+
+            if (userId != null) {
+                // Para usuário específico
+                results = reservationRepository.findDistinctReservationDatesByUserId(userId);
+            } else {
+                // Para ADMIN - todas as datas do sistema
+                results = reservationRepository.findAllDistinctReservationDates();
+            }
+
+            List<ReservationDateDTO> dates = results.stream()
+                    .map(ReservationDateDTO::new)
+                    .toList();
+
+            log.info("Found {} distinct reservation dates for user {}", dates.size(), userId);
+            return dates;
+
+        } catch (Exception e) {
+            log.error("Error finding available reservation dates for user {}: {}", userId, e.getMessage(), e);
+            throw new RuntimeException("Error finding available reservation dates: " + e.getMessage());
+        }
     }
 
     public boolean isReservationOwnedByUser(UUID reservationId, UUID userId) {

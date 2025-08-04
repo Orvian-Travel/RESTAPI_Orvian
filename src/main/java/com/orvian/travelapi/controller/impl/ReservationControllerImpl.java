@@ -1,6 +1,8 @@
 package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.orvian.travelapi.controller.GenericController;
 import com.orvian.travelapi.controller.dto.reservation.CreateReservationDTO;
+import com.orvian.travelapi.controller.dto.reservation.ReservationDateDTO;
 import com.orvian.travelapi.controller.dto.reservation.ReservationSearchResultDTO;
 import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Reservation;
@@ -27,6 +30,7 @@ import com.orvian.travelapi.service.exception.AccessDeniedException;
 import com.orvian.travelapi.service.security.OrvianAuthorizationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -102,17 +106,19 @@ public class ReservationControllerImpl implements GenericController {
             @RequestParam(defaultValue = "0") Integer pageNumber,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) UUID userId,
-            @RequestParam(required = false) ReservationSituation status) {
+            @RequestParam(required = false) ReservationSituation status,
+            @RequestParam(required = false)
+            @Schema(description = "Data da reserva no formato YYYY-MM-DD", example = "2025-01-15") LocalDate reservationDate) {
 
         log.info("DEBUG: Search parameters - pageNumber: {}, pageSize: {}, userId: {}, status: {}",
                 pageNumber, pageSize, userId, status);
 
         UUID effectiveUserId = authorizationService.getEffectiveUserIdForListing(userId);
 
-        log.info("Fetching reservations for userId: {} with status filter: {}", effectiveUserId, status);
+        log.info("Fetching reservations for userId: {} with status filter: {} and reservationDate: {}", effectiveUserId, status, reservationDate);
 
-        Page<ReservationSearchResultDTO> page = reservationService.findAllByStatus(
-                pageNumber, pageSize, effectiveUserId, status);
+        Page<ReservationSearchResultDTO> page = reservationService.findAllByStatusAndDate(
+                pageNumber, pageSize, effectiveUserId, status, reservationDate);
 
         log.info("DEBUG: Found {} reservations, total pages: {}", page.getTotalElements(), page.getTotalPages());
 
@@ -144,13 +150,35 @@ public class ReservationControllerImpl implements GenericController {
         @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
     })
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        if (!authorizationService.canModifyResource("DELETE", "reservation")) {
-            throw new AccessDeniedException("Apenas administradores podem excluir reservas");
+        if (!authorizationService.canCancelReservation(id)) {
+            throw new AccessDeniedException("Você só pode cancelar suas próprias reservas");
         }
 
-        log.info("Deleting reservation with ID: {}", id);
+        log.info("Cancelling reservation with ID: {}", id);
         reservationService.delete(id);
+
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/available-dates")
+    @Operation(summary = "Buscar datas de reserva disponíveis",
+            description = "Retorna todas as datas em que o usuário possui reservas para popular filtros de data")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Datas disponíveis recuperadas com sucesso"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<List<ReservationDateDTO>> getAvailableReservationDates(
+            @RequestParam(required = false) UUID userId) {
+
+        log.info("Fetching available reservation dates for userId: {}", userId);
+
+        UUID effectiveUserId = authorizationService.getEffectiveUserIdForListing(userId);
+
+        List<ReservationDateDTO> availableDates = reservationService.findAvailableReservationDates(effectiveUserId);
+
+        log.info("Found {} available reservation dates", availableDates.size());
+        return ResponseEntity.ok(availableDates);
     }
 
 }
