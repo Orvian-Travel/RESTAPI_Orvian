@@ -63,11 +63,11 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/payments").hasAnyRole("ADMIN", "ATENDENTE")
                 .requestMatchers(HttpMethod.GET, "/api/v1/payments/{id}").hasAnyRole("ADMIN", "ATENDENTE")
                 // ===== OPERAÇÕES DE MODIFICAÇÃO - SOMENTE ADMIN =====
-                // Reservas - apenas ADMIN pode criar/modificar/deletar
+                // Reservas - USER pode cancelar suas próprias, ADMIN pode fazer tudo
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservations").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/reservations/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/reservations/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/reservations/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/reservations/**").authenticated()
                 // Pagamentos - apenas ADMIN pode modificar
                 .requestMatchers(HttpMethod.POST, "/api/v1/payments/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/payments/**").hasRole("ADMIN")

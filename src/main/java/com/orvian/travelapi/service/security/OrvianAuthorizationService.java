@@ -256,4 +256,32 @@ public class OrvianAuthorizationService {
             return false;
         }
     }
+
+    public boolean canCancelReservation(UUID reservationId) {
+        try {
+            User currentUser = getCurrentUser();
+            String role = currentUser.getRole();
+
+            return switch (role) {
+                case "ADMIN" -> {
+                    log.debug("ADMIN can cancel any reservation: {}", reservationId);
+                    yield true;
+                }
+                case "USER", "ATENDENTE" -> {
+                    boolean isOwner = reservationService.isReservationOwnedByUser(reservationId, currentUser.getId());
+                    log.debug("{} {} cancel reservation {}: {}", role,
+                            isOwner ? "CAN" : "CANNOT", reservationId,
+                            isOwner ? "OWNER" : "NOT_OWNER");
+                    yield isOwner;
+                }
+                default -> {
+                    log.warn("Unknown role attempting to cancel reservation: {}", role);
+                    yield false;
+                }
+            };
+        } catch (Exception e) {
+            log.error("Error checking reservation cancellation permission: {}", e.getMessage(), e);
+            return false;
+        }
+    }
 }
