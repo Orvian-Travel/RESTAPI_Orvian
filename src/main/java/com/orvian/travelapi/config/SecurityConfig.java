@@ -38,6 +38,10 @@ public class SecurityConfig {
                 // Health check e documentação
                 .requestMatchers("/api/v1/health/**").permitAll()
                 .requestMatchers(getDocumentationEndpoints()).permitAll()
+                // ===== RATINGS - VISUALIZAÇÃO PÚBLICA =====
+                // Consulta de ratings disponíveis para todos (incluindo não autenticados)
+                .requestMatchers(HttpMethod.GET, "/api/v1/ratings").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/ratings/**").permitAll()
                 // ===== PACKAGES - VISUALIZAÇÃO PÚBLICA =====
                 // Consulta de pacotes disponível para todos (incluindo não autenticados)
                 .requestMatchers(HttpMethod.GET, "/api/v1/packages").permitAll()
