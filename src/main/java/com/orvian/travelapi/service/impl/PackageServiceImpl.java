@@ -114,12 +114,6 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     @Transactional
-    public List<PaymentByPackageDTO> packagesSalesTotal() {
-        return travelPackageRepository.sumTotalByPackage();
-    }
-
-    @Override
-    @Transactional
     public TravelPackage create(Record dto) {
         try {
             CreateTravelPackageDTO dtoTravelPackage = (CreateTravelPackageDTO) dto;

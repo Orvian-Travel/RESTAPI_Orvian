@@ -21,4 +21,9 @@ public interface TravelPackageRepository extends JpaRepository<TravelPackage, UU
 
     @Query(value = "SELECT * FROM VW_CONFIRMED_RESERVATIONS_SUM_PAYMENTS_BY_DESTINATION", nativeQuery = true)
     List<PaymentByPackageDTO> sumTotalByPackage();
+
+    @Query(value = "SELECT COUNT(*) AS novos_pacotes\n" +
+            "FROM TB_PACKAGES\n" +
+            "WHERE CREATED_AT >= DATEADD(DAY, -7, GETDATE());",nativeQuery = true)
+    Integer newPackageThisWeek();
 }
