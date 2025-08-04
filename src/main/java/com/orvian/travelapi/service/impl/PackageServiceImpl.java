@@ -234,7 +234,7 @@ public class PackageServiceImpl implements TravelPackageService {
             return packageOptional.isPresent();
         }
 
-        return !travelPackage.getId().equals(packageOptional.get().getId()) && packageOptional.isPresent();
+        return packageOptional.isPresent() && !travelPackage.getId().equals(packageOptional.get().getId());
     }
 
     private void updatePackageDatesIncremental(TravelPackage travelPackage, List<UpdatePackageDateDTO> packageDatesDTO) {
