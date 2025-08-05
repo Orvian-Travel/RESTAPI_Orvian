@@ -51,7 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/**").hasAnyRole("ADMIN", "ATENDENTE")
                 // Gestão de pacotes - apenas ADMIN pode modificar
                 .requestMatchers(HttpMethod.POST, "/api/v1/packages/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/packages/**").hasRole("ADMIN")
