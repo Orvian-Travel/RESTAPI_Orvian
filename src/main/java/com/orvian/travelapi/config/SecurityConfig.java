@@ -78,6 +78,9 @@ public class SecurityConfig {
                 // ===== ACESSO RESTRITO PARA USERS =====
                 // USER precisa ser tratado no nível do controller com validação de ownership
                 // Todas as outras requisições autenticadas passam por validação adicional
+                // ✅ EXPORTAÇÕES - ADMIN E ATENDENTE
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservations/export-sheet").hasAnyRole("ADMIN", "ATENDENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/reservations/export-pdf").hasAnyRole("ADMIN", "ATENDENTE")
                 .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
