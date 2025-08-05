@@ -13,6 +13,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.orvian.travelapi.controller.dto.admin.ReservationToSheetDTO;
 import com.orvian.travelapi.domain.model.Reservation;
 
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
@@ -39,5 +40,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
         ORDER BY r.reservationDate DESC
         """)
     List<LocalDate> findAllDistinctReservationDates();
+
+    @Query(value = "SELECT * FROM VW_RESERVATIONS_WITH_PACKAGE", nativeQuery = true)
+    List<ReservationToSheetDTO> exportToSheet();
 
 }

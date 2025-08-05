@@ -2,6 +2,8 @@ package com.orvian.travelapi.controller.impl;
 
 import java.net.URI;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
@@ -96,6 +98,45 @@ public class ReservationControllerImpl implements GenericController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    @GetMapping("/export-sheet")
+    @Operation(summary = "Exportar reservas para Excel", description = "Exporta os dados das reservas para um arquivo Excel (.xlsx)")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Arquivo gerado com sucesso"),
+        @ApiResponse(responseCode = "204", description = "Nenhum dado encontrado para exportação"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas administradores"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<byte[]> exportReservationsToSheet() {
+        // ✅ AUTORIZAÇÃO
+        if (!authorizationService.canModifyResource("EXPORT", "reservation")) {
+            throw new AccessDeniedException("Apenas administradores podem exportar dados de reservas");
+        }
+
+        try {
+            byte[] excelData = reservationService.exportReservationsToExcel();
+
+            if (excelData.length == 0) {
+                return ResponseEntity.noContent().build();
+            }
+
+            String fileName = generateFileName();
+
+            log.info("Excel export requested - file size: {} bytes", excelData.length);
+
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + fileName)
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .header("Expires", "0")
+                    .body(excelData);
+
+        } catch (Exception e) {
+            log.error("Failed to export reservations to Excel: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/search")
     @Operation(summary = "Buscar reservas com filtros", description = "Busca reservas com filtros de usuário e status.")
     @ApiResponses({
@@ -179,6 +220,61 @@ public class ReservationControllerImpl implements GenericController {
 
         log.info("Found {} available reservation dates", availableDates.size());
         return ResponseEntity.ok(availableDates);
+    }
+
+    private String generateFileName() {
+        return String.format("reservas_export_%s.xlsx",
+                LocalDateTime.now().format(
+                        DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                )
+        );
+    }
+
+    @GetMapping("/export-pdf")
+    @Operation(summary = "Exportar reservas para PDF", description = "Exporta os dados das reservas para um arquivo PDF")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Arquivo PDF gerado com sucesso"),
+        @ApiResponse(responseCode = "204", description = "Nenhum dado encontrado para exportação"),
+        @ApiResponse(responseCode = "403", description = "Acesso negado - Apenas administradores"),
+        @ApiResponse(responseCode = "500", description = "Erro interno do servidor")
+    })
+    public ResponseEntity<byte[]> exportReservationsToPdf() {
+        // ✅ AUTORIZAÇÃO
+        if (!authorizationService.canModifyResource("EXPORT", "reservation")) {
+            throw new AccessDeniedException("Apenas administradores podem exportar dados de reservas");
+        }
+
+        try {
+            byte[] pdfData = reservationService.exportReservationsToPdf();
+
+            if (pdfData.length == 0) {
+                return ResponseEntity.noContent().build();
+            }
+
+            String fileName = generatePdfFileName();
+
+            log.info("PDF export requested - file size: {} bytes", pdfData.length);
+
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=" + fileName)
+                    .header("Content-Type", "application/pdf")
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .header("Expires", "0")
+                    .body(pdfData);
+
+        } catch (Exception e) {
+            log.error("Failed to export reservations to PDF: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    private String generatePdfFileName() {
+        return String.format("reservas_relatorio_%s.pdf",
+                java.time.LocalDateTime.now().format(
+                        java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
+                )
+        );
     }
 
 }

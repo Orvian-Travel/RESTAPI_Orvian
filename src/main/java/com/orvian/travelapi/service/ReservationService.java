@@ -23,4 +23,8 @@ public interface ReservationService extends CrudService<UUID, Reservation> {
             UUID userId, ReservationSituation status, LocalDate reservationDate);
 
     List<ReservationDateDTO> findAvailableReservationDates(UUID userId);
+
+    byte[] exportReservationsToExcel();
+
+    byte[] exportReservationsToPdf();
 }

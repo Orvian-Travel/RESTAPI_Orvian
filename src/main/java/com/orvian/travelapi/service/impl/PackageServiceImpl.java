@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import com.orvian.travelapi.controller.dto.packagedate.UpdatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
-import com.orvian.travelapi.controller.dto.travelpackage.PaymentByPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
 import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
