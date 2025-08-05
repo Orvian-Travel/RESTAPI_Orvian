@@ -32,9 +32,20 @@ public class RatingControllerImpl {
         } catch (EntityNotFoundException e) {
             System.out.println("Erro: Entidade não encontrada - " + e.getMessage());
             return ResponseEntity.notFound().build();
+        } catch (IllegalStateException e) {
+            // Exceção específica para reserva já avaliada
+            System.out.println("Erro: Reserva já avaliada - " + e.getMessage());
+            return ResponseEntity.status(409).build(); // Conflict
+        } catch (SecurityException e) {
+            System.out.println("Erro: Sem permissão - " + e.getMessage());
+            return ResponseEntity.status(403).build(); // Forbidden
         } catch (IllegalArgumentException e) {
-            System.out.println("Erro: Argumento inválido - " + e.getMessage());
-            return ResponseEntity.badRequest().build();
+            System.out.println("Erro: Dados inválidos - " + e.getMessage());
+            return ResponseEntity.badRequest().build(); // Bad Request - dados inválidos
+        } catch (Exception e) {
+            System.out.println("Erro interno: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).build(); // Internal Server Error
         }
     }
 

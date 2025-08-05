@@ -40,12 +40,12 @@ public class RatingServiceImpl implements RatingService {
 
         // Verificar se já existe uma avaliação para esta reserva
         if (ratingRepository.existsByReservationId(dto.reservationId())) {
-            throw new IllegalArgumentException("Já existe uma avaliação para esta reserva");
+            throw new IllegalStateException("Esta reserva já foi avaliada");
         }
 
         // Verificar se a reserva pertence ao usuário autenticado
         if (!reservation.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("Você só pode avaliar suas próprias reservas");
+            throw new SecurityException("Você não tem permissão para avaliar esta reserva");
         }
 
         Rating rating = new Rating();
