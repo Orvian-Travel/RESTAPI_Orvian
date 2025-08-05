@@ -21,14 +21,17 @@ import com.orvian.travelapi.controller.dto.packagedate.UpdatePackageDateDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.CreateTravelPackageDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.PackageSearchResultDTO;
 import com.orvian.travelapi.controller.dto.travelpackage.UpdateTravelPackageDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Media;
 import com.orvian.travelapi.domain.model.PackageDate;
 import com.orvian.travelapi.domain.model.TravelPackage;
 import com.orvian.travelapi.domain.repository.MediaRepository;
 import com.orvian.travelapi.domain.repository.PackageDateRepository;
+import com.orvian.travelapi.domain.repository.ReservationRepository;
 import com.orvian.travelapi.domain.repository.TravelPackageRepository;
 import com.orvian.travelapi.mapper.TravelPackageMapper;
 import com.orvian.travelapi.service.TravelPackageService;
+import com.orvian.travelapi.service.exception.BusinessException;
 import com.orvian.travelapi.service.exception.DuplicatedRegistryException;
 import com.orvian.travelapi.service.exception.NotFoundException;
 import static com.orvian.travelapi.service.exception.PersistenceExceptionUtil.handlePersistenceError;
@@ -49,6 +52,7 @@ public class PackageServiceImpl implements TravelPackageService {
     private final TravelPackageMapper travelPackageMapper;
     private final PackageDateRepository packageDateRepository;
     private final MediaRepository mediaRepository;
+    private final ReservationRepository reservationRepository;
 
     @Override
     public Page<PackageSearchResultDTO> findAll(Integer pageNumber, Integer pageSize, String title) {
@@ -203,15 +207,28 @@ public class PackageServiceImpl implements TravelPackageService {
 
     @Override
     public void delete(UUID id) {
-        Optional<TravelPackage> packageOptional = travelPackageRepository.findById(id);
+        try {
+            log.info("Attempting to delete travel package with ID: {}", id);
 
-        if (packageOptional.isEmpty()) {
-            log.error("Travel package not found with ID: {}", id);
-            throw new NotFoundException("Travel package with ID " + id + " not found.");
+            TravelPackage travelPackage = travelPackageRepository.findById(id)
+                    .orElseThrow(() -> {
+                        log.warn("Travel package not found for deletion with ID: {}", id);
+                        return new NotFoundException("Travel package with ID " + id + " not found.");
+                    });
+
+            // Verificar se há reservas associadas (regra de negócio)
+            validatePackageDeletion(travelPackage);
+
+            travelPackageRepository.deleteById(id);
+            log.info("Travel package with ID: {} deleted successfully", id);
+
+        } catch (NotFoundException e) {
+            // Re-throw business exceptions
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to delete travel package with ID {}: {}", id, e.getMessage(), e);
+            handlePersistenceError(e, log);
         }
-
-        travelPackageRepository.deleteById(id);
-        log.info("Travel package with ID: {} deleted successfully", id);
     }
 
     private void validateCreationAndUpdate(TravelPackage travelPackage) {
@@ -280,6 +297,14 @@ public class PackageServiceImpl implements TravelPackageService {
             log.error("Error incrementally updating package dates for travel package {}: {}",
                     travelPackage.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to update package dates: " + e.getMessage());
+        }
+    }
+
+    private void validatePackageDeletion(TravelPackage travelPackage) {
+
+        if (reservationRepository.existsByPackageDate_TravelPackage_IdAndSituationNot(
+                travelPackage.getId(), ReservationSituation.CANCELADA)) {
+            throw new BusinessException("Cannot delete package with active reservations");
         }
     }
 }

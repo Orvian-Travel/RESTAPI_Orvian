@@ -12,8 +12,10 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
 
 import com.orvian.travelapi.controller.dto.admin.ReservationToSheetDTO;
+import com.orvian.travelapi.domain.enums.ReservationSituation;
 import com.orvian.travelapi.domain.model.Reservation;
 
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
@@ -22,7 +24,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
     Page<Reservation> findAll(Specification<Reservation> spec, Pageable pageable);
 
     @EntityGraph(attributePaths = {"travelers"})
-    Optional<Reservation> findById(UUID id);
+    @NonNull
+    Optional<Reservation> findById(@NonNull UUID id);
 
     boolean existsByUserIdAndPackageDateId(UUID userId, UUID packageDateId);
 
@@ -43,5 +46,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, UUID> 
 
     @Query(value = "SELECT * FROM VW_RESERVATIONS_WITH_PACKAGE", nativeQuery = true)
     List<ReservationToSheetDTO> exportToSheet();
+
+    /**
+     * Verifica se existem reservas para um pacote de viagem que não estejam no
+     * status especificado
+     *
+     * @param travelPackageId ID do pacote de viagem
+     * @param status Status da reserva a ser excluído da busca
+     * @return true se existirem reservas ativas (não no status especificado)
+     */
+    boolean existsByPackageDate_TravelPackage_IdAndSituationNot(UUID travelPackageId, ReservationSituation status);
 
 }
