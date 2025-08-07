@@ -188,11 +188,11 @@ public class PackageServiceImpl implements TravelPackageService {
             // 1. Atualizar dados do TravelPackage
             travelPackageMapper.updateEntityFromDto(updateDto, travelPackage);
             validateCreationAndUpdate(travelPackage);
-            TravelPackage savedPackage = travelPackageRepository.save(travelPackage);
+            // ✅ NÃO PRECISA DO save() - Hibernate detecta mudanças automaticamente
 
-            // 2. ✅ Atualizar PackageDates se fornecido
+            // ✅ 2. Atualizar PackageDates com validação inteligente
             if (updateDto.packageDates() != null) {
-                updatePackageDatesIncremental(savedPackage, updateDto.packageDates());
+                updatePackageDatesWithSmartValidation(travelPackage, updateDto.packageDates());
             }
 
             log.info("Package with ID: {} updated successfully", travelPackage.getId());
@@ -246,9 +246,17 @@ public class PackageServiceImpl implements TravelPackageService {
         return packageOptional.isPresent() && !travelPackage.getId().equals(packageOptional.get().getId());
     }
 
-    private void updatePackageDatesIncremental(TravelPackage travelPackage, List<UpdatePackageDateDTO> packageDatesDTO) {
+    private void validatePackageDeletion(TravelPackage travelPackage) {
+
+        if (reservationRepository.existsByPackageDate_TravelPackage_IdAndSituationNot(
+                travelPackage.getId(), ReservationSituation.CANCELADA)) {
+            throw new BusinessException("Cannot delete package with active reservations");
+        }
+    }
+
+    private void updatePackageDatesWithSmartValidation(TravelPackage travelPackage, List<UpdatePackageDateDTO> packageDatesDTO) {
         try {
-            log.info("Incrementally updating package dates for travel package: {}", travelPackage.getId());
+            log.info("Updating package dates with smart validation for travel package: {}", travelPackage.getId());
 
             List<PackageDate> existingDates = packageDateRepository.findByTravelPackage_Id(travelPackage.getId());
 
@@ -257,28 +265,52 @@ public class PackageServiceImpl implements TravelPackageService {
                 return;
             }
 
-            // Mapear datas existentes por ID (se tiverem ID no DTO)
+            // ✅ Mapear datas existentes por ID
             Map<UUID, PackageDate> existingDatesMap = existingDates.stream()
                     .collect(Collectors.toMap(PackageDate::getId, date -> date));
 
-            List<PackageDate> updatedDates = new ArrayList<>();
+            List<PackageDate> newDates = new ArrayList<>();
             Set<UUID> processedIds = new HashSet<>();
 
             for (UpdatePackageDateDTO dto : packageDatesDTO) {
                 if (dto.id() != null && existingDatesMap.containsKey(dto.id())) {
-                    // Atualizar existente
+                    // ✅ ATUALIZAR EXISTENTE: Usar dirty checking com validação condicional
                     PackageDate existing = existingDatesMap.get(dto.id());
-                    travelPackageMapper.updatePackageDateFromDto(dto, existing);
-                    updatedDates.add(existing);
+
+                    // ✅ Validar apenas se as datas mudaram
+                    boolean datesChanged = !existing.getStartDate().equals(dto.startDate())
+                            || !existing.getEndDate().equals(dto.endDate());
+
+                    if (datesChanged) {
+                        // ✅ Se mudou as datas, validar apenas as novas datas (mais flexível para updates)
+                        validateUpdatedDates(dto, existing);
+                    }
+
+                    // ✅ Aplicar mudanças usando dirty checking - Hibernate detecta automaticamente
+                    existing.setStartDate(dto.startDate());
+                    existing.setEndDate(dto.endDate());
+                    existing.setQtd_available(dto.qtd_available());
+
+                    // ✅ NÃO PRECISA DO save() - Hibernate faz UPDATE automaticamente
                     processedIds.add(dto.id());
+
+                    log.info("Updated existing package date with ID: {} using dirty checking", dto.id());
                 } else {
-                    // Criar novo
+                    // ✅ CRIAR NOVA: Aplicar validação completa (mais rigorosa para criação)
+                    validateNewPackageDate(dto);
                     PackageDate newDate = travelPackageMapper.toPackageDate(dto, travelPackage);
-                    updatedDates.add(newDate);
+                    newDates.add(newDate);
+                    log.info("Created new package date for package: {}", travelPackage.getId());
                 }
             }
 
-            // Remover datas que não foram processadas
+            // ✅ Salvar apenas as datas novas (as existentes são atualizadas por dirty checking)
+            if (!newDates.isEmpty()) {
+                packageDateRepository.saveAll(newDates);
+                log.info("Saved {} new package dates", newDates.size());
+            }
+
+            // ✅ Remover datas que não foram processadas
             List<PackageDate> datesToRemove = existingDates.stream()
                     .filter(date -> !processedIds.contains(date.getId()))
                     .toList();
@@ -288,22 +320,59 @@ public class PackageServiceImpl implements TravelPackageService {
                 log.info("Removed {} package dates", datesToRemove.size());
             }
 
-            // Salvar atualizações
-            packageDateRepository.saveAll(updatedDates);
-            log.info("Updated/created {} package dates", updatedDates.size());
-
         } catch (Exception e) {
-            log.error("Error incrementally updating package dates for travel package {}: {}",
+            log.error("Error updating package dates with smart validation for travel package {}: {}",
                     travelPackage.getId(), e.getMessage(), e);
             throw new RuntimeException("Failed to update package dates: " + e.getMessage());
         }
     }
 
-    private void validatePackageDeletion(TravelPackage travelPackage) {
+    private void validateUpdatedDates(UpdatePackageDateDTO dto, PackageDate existing) {
+        LocalDate currentUTCDate = LocalDate.now(java.time.ZoneOffset.UTC);
 
-        if (reservationRepository.existsByPackageDate_TravelPackage_IdAndSituationNot(
-                travelPackage.getId(), ReservationSituation.CANCELADA)) {
-            throw new BusinessException("Cannot delete package with active reservations");
+        // ✅ Para updates: permitir manter datas passadas se não mudaram drasticamente
+        // Validar apenas consistência lógica e mudanças muito problemáticas
+        if (dto.endDate().isBefore(dto.startDate())) {
+            log.warn("End date {} is before start date {} for existing package date {}",
+                    dto.endDate(), dto.startDate(), existing.getId());
+            throw new IllegalArgumentException("End date must be after start date");
         }
+
+        if (dto.qtd_available() < 0) {
+            throw new IllegalArgumentException("Available quantity must be non-negative");
+        }
+
+        // ✅ Aviso apenas para datas muito antigas (não bloqueia)
+        if (dto.startDate().isBefore(currentUTCDate.minusDays(30))) {
+            log.warn("Updating package date {} to a date more than 30 days in the past: {}",
+                    existing.getId(), dto.startDate());
+        }
+
+        log.debug("Updated package date {} passed validation checks", existing.getId());
+    }
+
+    private void validateNewPackageDate(UpdatePackageDateDTO dto) {
+        LocalDate currentUTCDate = LocalDate.now(java.time.ZoneOffset.UTC);
+
+        // ✅ Para criação: aplicar validação rigorosa
+        if (dto.startDate().isBefore(currentUTCDate)) {
+            log.error("Cannot create new package date with past start date: {}", dto.startDate());
+            throw new IllegalArgumentException("Start date must be today or in the future (UTC) for new package dates");
+        }
+
+        if (dto.endDate().isBefore(currentUTCDate)) {
+            log.error("Cannot create new package date with past end date: {}", dto.endDate());
+            throw new IllegalArgumentException("End date must be today or in the future (UTC) for new package dates");
+        }
+
+        if (dto.endDate().isBefore(dto.startDate())) {
+            throw new IllegalArgumentException("End date must be after start date");
+        }
+
+        if (dto.qtd_available() < 1) {
+            throw new IllegalArgumentException("Available quantity must be at least 1 for new package dates");
+        }
+
+        log.debug("New package date passed validation checks");
     }
 }
