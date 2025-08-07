@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class PackageServiceImpl implements TravelPackageService {
 
     private final TravelPackageRepository travelPackageRepository;
